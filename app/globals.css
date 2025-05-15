@@ -4,6 +4,9 @@
 
 @layer base {
   :root {
+    --font-geist-sans: system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
 
@@ -88,6 +91,13 @@
 @layer components {
   .time-tag {
     @apply inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+
+  /* Mobile optimization for time tags */
+  @media (max-width: 640px) {
+    .time-tag {
+      @apply px-1.5 py-0.5 text-[0.65rem] leading-tight whitespace-nowrap;
+    }
   }
 
   .time-tag-success {

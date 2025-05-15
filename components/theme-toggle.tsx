@@ -23,31 +23,31 @@ export function ThemeToggle() {
       <Button
         variant="ghost"
         size="icon"
-        className={`h-7 w-7 rounded-sm ${theme === "system" ? "bg-zinc-800" : "bg-transparent hover:bg-zinc-900"}`}
+        className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm ${theme === "system" ? "bg-zinc-800" : "bg-transparent hover:bg-zinc-900"}`}
         onClick={() => setTheme("system")}
         title="Sistem teması"
       >
-        <Monitor className="h-4 w-4" />
+        <Monitor className="h-3 w-3 sm:h-4 sm:w-4" />
         <span className="sr-only">Sistem teması</span>
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className={`h-7 w-7 rounded-sm ${theme === "light" ? "bg-zinc-800" : "bg-transparent hover:bg-zinc-900"}`}
+        className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm ${theme === "light" ? "bg-zinc-800" : "bg-transparent hover:bg-zinc-900"}`}
         onClick={() => setTheme("light")}
         title="Açık tema"
       >
-        <Sun className="h-4 w-4" />
+        <Sun className="h-3 w-3 sm:h-4 sm:w-4" />
         <span className="sr-only">Açık tema</span>
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className={`h-7 w-7 rounded-sm ${theme === "dark" ? "bg-zinc-800" : "bg-transparent hover:bg-zinc-900"}`}
+        className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm ${theme === "dark" ? "bg-zinc-800" : "bg-transparent hover:bg-zinc-900"}`}
         onClick={() => setTheme("dark")}
         title="Koyu tema"
       >
-        <Moon className="h-4 w-4" />
+        <Moon className="h-3 w-3 sm:h-4 sm:w-4" />
         <span className="sr-only">Koyu tema</span>
       </Button>
     </div>

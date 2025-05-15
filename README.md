@@ -1,30 +1,53 @@
-# Extracting bus stop data
+# Denizli Ulaşım Durak
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+Denizli'deki toplu taşıma durakları ve otobüs hatları hakkında bilgi veren bir web uygulaması.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/umutcans-projects-ae35fc67/v0-extracting-bus-stop-data)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/JaVwPhHR2bi)
+## Proje Hakkında
 
-## Overview
+Bu uygulama, Denizli şehrindeki toplu taşıma kullanıcılarına kolaylık sağlamak amacıyla geliştirilmiştir. Kullanıcılar, durak bilgilerini sorgulayabilir, otobüs hatlarını görüntüleyebilir ve en yakın durakları bulabilirler.
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Özellikler
 
-## Deployment
+- Durak arama ve sorgulama
+- Otobüs hatları bilgisi
+- Yaklaşan otobüslerin varış süreleri
+- Sık kullanılan durakları kaydetme
+- Karanlık/aydınlık tema desteği
+- Mobil uyumlu tasarım
 
-Your project is live at:
+## Teknolojiler
 
-**[https://vercel.com/umutcans-projects-ae35fc67/v0-extracting-bus-stop-data](https://vercel.com/umutcans-projects-ae35fc67/v0-extracting-bus-stop-data)**
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Shadcn UI
 
-## Build your app
+## Kurulum
 
-Continue building your app on:
+```bash
+# Projeyi klonlayın
+git clone https://github.com/umutcandev/denizli-ulasim-durak.git
 
-**[https://v0.dev/chat/projects/JaVwPhHR2bi](https://v0.dev/chat/projects/JaVwPhHR2bi)**
+# Proje dizinine gidin
+cd denizli-ulasim-durak
 
-## How It Works
+# Bağımlılıkları yükleyin
+npm install
+# veya
+pnpm install
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+# Geliştirme sunucusunu başlatın
+npm run dev
+# veya
+pnpm dev
+```
+
+Uygulamayı geliştirme modunda çalıştırmak için tarayıcınızda [http://localhost:3000](http://localhost:3000) adresini açın.
+
+## Canlı Demo
+
+Projenin canlı versiyonuna [https://denizli-ulasim-durak.vercel.app](https://denizli-ulasim-durak.vercel.app) adresinden ulaşabilirsiniz.
+
+## İletişim
+
+GitHub: [umutcandev](https://github.com/umutcandev)

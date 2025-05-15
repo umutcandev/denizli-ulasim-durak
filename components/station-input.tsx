@@ -5,13 +5,14 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Github } from "lucide-react"
+import { Github, Loader2 } from "lucide-react"
 
 interface StationInputProps {
   onSubmit: (stationId: string) => void
+  isLoading: boolean
 }
 
-export default function StationInput({ onSubmit }: StationInputProps) {
+export default function StationInput({ onSubmit, isLoading }: StationInputProps) {
   const [inputValue, setInputValue] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,18 +42,26 @@ export default function StationInput({ onSubmit }: StationInputProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
           <Input
-            type="text"
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Durak numarasını girin (örn: 1628)"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             className="flex-1 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
+            disabled={isLoading}
           />
           <Button
             type="submit"
             variant="outline"
             className="bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white dark:bg-white dark:text-black dark:hover:bg-gray-200"
+            disabled={isLoading}
           >
-            Ara
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Ara"
+            )}
           </Button>
         </form>
       </CardContent>

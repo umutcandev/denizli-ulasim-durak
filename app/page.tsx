@@ -1,11 +1,14 @@
 "use client"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { fetchBusData } from "@/lib/api"
 import BusSchedule from "@/components/bus-schedule"
 import StationInput from "@/components/station-input"
 import RecentStations from "@/components/recent-stations"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
+import MobileBottomSpace from "@/components/mobile-bottom-space"
+import Image from "next/image"
+import { Bus, MapPin } from "lucide-react"
 
 export default function Home() {
   const [stationId, setStationId] = useState<string>("")
@@ -13,6 +16,27 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [recentStations, setRecentStations] = useState<Array<{ id: string; name: string }>>([])
+  const [currentTime, setCurrentTime] = useState<string>("")
+  const scheduleRef = useRef<HTMLDivElement>(null)
+
+  // Tarayıcı tarafında çalıştığında zamanı ayarla
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date()
+      setCurrentTime(now.toLocaleTimeString("tr-TR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }))
+    }
+    
+    updateTime()
+    
+    // Her saniye zamanı güncelle
+    const intervalId = setInterval(updateTime, 1000)
+    
+    return () => clearInterval(intervalId)
+  }, [])
 
   // Service Worker'ı kaydet - sadece production ortamında ve tarayıcıda çalışırken
   useEffect(() => {
@@ -70,6 +94,13 @@ export default function Home() {
       if (data && data.stationName) {
         addToRecentStations(stationId, data.stationName)
       }
+      
+      // Veri yüklendikten sonra, durak bilgilerine scroll yap
+      setTimeout(() => {
+        if (scheduleRef.current) {
+          scheduleRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+      }, 100)
     } catch (err) {
       setError("Veri yüklenirken bir hata oluştu. Lütfen geçerli bir durak numarası girdiğinizden emin olun.")
       console.error(err)
@@ -92,8 +123,8 @@ export default function Home() {
     // Eğer durak zaten listede varsa, onu çıkar (en başa eklemek için)
     const filteredStations = recentStations.filter((station) => station.id !== id)
 
-    // Yeni durak listesi oluştur (en fazla 5 durak)
-    const updatedStations = [newStation, ...filteredStations].slice(0, 5)
+    // Yeni durak listesi oluştur (en fazla 10 durak)
+    const updatedStations = [newStation, ...filteredStations].slice(0, 10)
 
     // State ve localStorage'ı güncelle
     setRecentStations(updatedStations)
@@ -113,45 +144,54 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="bg-zinc-900 dark:bg-black text-white p-6 rounded-lg shadow-md mb-6">
-          <div className="flex justify-between items-center">
+        <div className="bg-zinc-900 dark:bg-black text-white p-4 sm:p-6 rounded-lg shadow-md mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div className="flex items-center">
-              <div className="w-12 h-12 mr-4 bg-white rounded-full flex items-center justify-center">
-                <span className="text-black font-bold text-xs">DBB</span>
+              <div className="pl-2 mr-3 sm:mr-4">
+                <Image src="/images/logo-twins.png" alt="Logo" width={60} height={60} className="object-contain" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Denizli Akıllı Durak</h1>
-                <p className="text-xs text-gray-400">Versiyon 5</p>
+                <h1 className="text-xl sm:text-2xl font-bold">Denizli Akıllı Durak</h1>
+                <p className="text-xs text-gray-400">Denizli Ulaşım'ın durak saatleri için hazırlanmıştır.</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-sm">{new Date().toLocaleString("tr-TR")}</div>
+            <div className="flex items-center justify-between mt-3 sm:mt-0 sm:justify-end sm:gap-4">
+              <div className="text-sm">{currentTime}</div>
               <ThemeToggle />
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <StationInput onSubmit={handleStationSubmit} />
+          <StationInput onSubmit={handleStationSubmit} isLoading={loading} />
 
           {recentStations.length > 0 && (
             <RecentStations stations={recentStations} onStationClick={handleRecentStationClick} />
           )}
 
-          {!stationId ? (
-            <div className="bg-card text-card-foreground rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 text-center">
-              <p className="text-muted-foreground">Lütfen bir durak numarası girin</p>
-              <p className="text-sm mt-2 text-muted-foreground">Örnek: 13, 1628, 2500 vb.</p>
-            </div>
-          ) : loading ? (
-            <BusScheduleSkeleton />
-          ) : error ? (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800/30 p-6 text-center">
-              {error}
-            </div>
-          ) : (
-            <BusSchedule data={busData} onRefresh={loadBusData} />
-          )}
+          <div ref={scheduleRef}>
+            {!stationId ? (
+              <div className="bg-card text-card-foreground rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm p-3 flex items-center justify-center">
+                <div className="flex items-center gap-3">
+                  <Bus className="h-6 w-6 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Yukarıdan bir durak numarası girin...</p>
+                  </div>
+                </div>
+              </div>
+            ) : loading ? (
+              <BusScheduleSkeleton />
+            ) : error ? (
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800/30 p-6 text-center">
+                {error}
+              </div>
+            ) : (
+              <BusSchedule data={busData} onRefresh={loadBusData} />
+            )}
+          </div>
+          
+          {/* Mobile bottom space */}
+          <MobileBottomSpace />
         </div>
       </div>
     </main>

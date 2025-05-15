@@ -1,8 +1,19 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { GeistSans } from "geist/font/sans"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { FontProvider } from "@/components/font-provider"
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+}
 
 export const metadata: Metadata = {
   title: "Denizli Akıllı Durak | Otobüs Bilgi Sistemi",
@@ -35,15 +46,6 @@ export const metadata: Metadata = {
     description: "Denizli Büyükşehir Belediyesi Akıllı Durak Sistemi ile otobüs saatlerini öğrenin.",
     creator: "@umutcandev",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#000000" },
-  ],
   manifest: "/manifest.json",
   icons: {
     icon: [
@@ -57,7 +59,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     capable: true,
   },
-    generator: 'v0.dev'
+  generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -73,6 +75,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={GeistSans.className}>
+        <FontProvider />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
