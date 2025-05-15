@@ -23,7 +23,7 @@ interface BusScheduleProps {
 export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   if (!data) {
     return (
-      <Card className="border-zinc-800">
+      <Card className="border-zinc-200 dark:border-zinc-800">
         <CardContent className="pt-6">
           <div className="text-center p-4">Veri bulunamadı</div>
         </CardContent>
@@ -36,8 +36,21 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   const stationId = data.stationId || ""
   const busList = data.busList || []
 
+  // Kalan süreye göre tag sınıfını belirleyen yardımcı fonksiyon
+  const getTimeTagClass = (minutes: number): string => {
+    if (minutes <= 10) return "time-tag time-tag-success"
+    if (minutes <= 25) return "time-tag time-tag-warning"
+    return "time-tag time-tag-danger"
+  }
+
+  // Süreyi dakikaya çeviren yardımcı fonksiyon
+  const getMinutes = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(":").map(Number)
+    return hours * 60 + minutes
+  }
+
   return (
-    <Card className="border-zinc-800">
+    <Card className="border-zinc-200 dark:border-zinc-800">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl text-center">
           {stationName} {stationId && `(${stationId})`} DURAĞI
@@ -52,7 +65,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-zinc-800">
+              <TableRow className="border-zinc-200 dark:border-zinc-800">
                 <TableHead className="w-[100px]">Hat No</TableHead>
                 <TableHead>Güzergah</TableHead>
                 <TableHead className="text-right">Kalan Süre</TableHead>
@@ -62,9 +75,11 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
               {busList.map((bus, index) => {
                 // Kalan süreyi hesapla
                 let remainingTime = ""
+                let minutes = 0
 
                 if (bus.sure) {
-                  const [hours, minutes] = bus.sure.split(":").map(Number)
+                  const [hours, mins] = bus.sure.split(":").map(Number)
+                  minutes = hours * 60 + mins
 
                   if (
                     bus.kalanduraksayisi === 1 &&
@@ -73,20 +88,28 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                     bus.plaka !== "ilkDurakKalkan"
                   ) {
                     remainingTime = "Gelmek Üzere"
+                    minutes = 0
                   } else if (hours > 0) {
-                    remainingTime = `${hours} saat ${minutes} dk`
+                    remainingTime = `${hours} saat ${mins} dk`
                   } else {
-                    remainingTime = `${minutes} dk`
+                    remainingTime = `${mins} dk`
                   }
                 } else {
                   remainingTime = "Bilinmiyor"
                 }
 
+                const timeTagClass = getTimeTagClass(minutes)
+
                 return (
-                  <TableRow key={index} className="border-zinc-800 hover:bg-zinc-900">
+                  <TableRow
+                    key={index}
+                    className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                  >
                     <TableCell className="font-medium">{bus.hatno?.replace("D", "") || "-"}</TableCell>
                     <TableCell>{bus.hatadi || "-"}</TableCell>
-                    <TableCell className="text-right font-medium">{remainingTime}</TableCell>
+                    <TableCell className="text-right">
+                      <span className={timeTagClass}>{remainingTime}</span>
+                    </TableCell>
                   </TableRow>
                 )
               })}

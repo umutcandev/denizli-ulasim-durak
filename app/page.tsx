@@ -4,6 +4,8 @@ import { fetchBusData } from "@/lib/api"
 import BusSchedule from "@/components/bus-schedule"
 import StationInput from "@/components/station-input"
 import RecentStations from "@/components/recent-stations"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 
 export default function Home() {
   const [stationId, setStationId] = useState<string>("")
@@ -11,6 +13,36 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [recentStations, setRecentStations] = useState<Array<{ id: string; name: string }>>([])
+
+  // Service Worker'ı kaydet - sadece production ortamında ve tarayıcıda çalışırken
+  useEffect(() => {
+    // Tarayıcıda çalışıp çalışmadığını kontrol et
+    if (typeof window === "undefined") return
+
+    // Geliştirme ortamında veya preview ortamında service worker'ı kaydetme
+    const isLocalhost = Boolean(
+      window.location.hostname === "localhost" ||
+        window.location.hostname === "[::1]" ||
+        window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/) ||
+        window.location.hostname.includes("vusercontent.net"), // Vercel preview ortamı
+    )
+
+    // Service worker'ı sadece production ortamında kaydet
+    if ("serviceWorker" in navigator && !isLocalhost) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((registration) => {
+            console.log("Service Worker registered with scope:", registration.scope)
+          })
+          .catch((error) => {
+            console.error("Service Worker registration failed:", error)
+          })
+      })
+    } else {
+      console.log("Service Worker is disabled in development or preview environment")
+    }
+  }, [])
 
   // Sayfa yüklendiğinde localStorage'dan son bakılan durakları al
   useEffect(() => {
@@ -81,7 +113,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="bg-black text-white p-6 rounded-lg shadow-md mb-6">
+        <div className="bg-zinc-900 dark:bg-black text-white p-6 rounded-lg shadow-md mb-6">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className="w-12 h-12 mr-4 bg-white rounded-full flex items-center justify-center">
@@ -92,7 +124,10 @@ export default function Home() {
                 <p className="text-xs text-gray-400">Versiyon 5</p>
               </div>
             </div>
-            <div className="text-sm">{new Date().toLocaleString("tr-TR")}</div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm">{new Date().toLocaleString("tr-TR")}</div>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
 
@@ -104,18 +139,14 @@ export default function Home() {
           )}
 
           {!stationId ? (
-            <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6 text-center">
+            <div className="bg-card text-card-foreground rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm p-6 text-center">
               <p className="text-muted-foreground">Lütfen bir durak numarası girin</p>
               <p className="text-sm mt-2 text-muted-foreground">Örnek: 13, 1628, 2500 vb.</p>
             </div>
           ) : loading ? (
-            <div className="bg-card text-card-foreground rounded-lg border shadow-sm p-6">
-              <div className="flex justify-center items-center h-40">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-              </div>
-            </div>
+            <BusScheduleSkeleton />
           ) : error ? (
-            <div className="bg-destructive/10 text-destructive rounded-lg border border-destructive/20 p-6 text-center">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800/30 p-6 text-center">
               {error}
             </div>
           ) : (

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Progress } from "@/components/ui/progress"
+import { useTheme } from "next-themes"
 
 interface RefreshProgressProps {
   interval: number
@@ -11,6 +12,7 @@ interface RefreshProgressProps {
 export function RefreshProgress({ interval, onRefresh }: RefreshProgressProps) {
   const [progress, setProgress] = useState(100)
   const [timeLeft, setTimeLeft] = useState(interval / 1000)
+  const { theme } = useTheme()
 
   useEffect(() => {
     const startTime = Date.now()
@@ -42,7 +44,11 @@ export function RefreshProgress({ interval, onRefresh }: RefreshProgressProps) {
         <span>Otomatik yenileme</span>
         <span>{timeLeft} saniye</span>
       </div>
-      <Progress value={progress} className="h-2 bg-zinc-800" indicatorClassName="bg-white" />
+      <Progress
+        value={progress}
+        className="h-2 bg-zinc-200 dark:bg-zinc-800"
+        indicatorClassName={theme === "light" ? "bg-zinc-800" : "bg-white"}
+      />
     </div>
   )
 }

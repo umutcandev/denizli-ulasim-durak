@@ -1,0 +1,31 @@
+import type { MetadataRoute } from "next"
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "Denizli Akıllı Durak",
+    short_name: "Akıllı Durak",
+    description: "Denizli Büyükşehir Belediyesi Akıllı Durak Sistemi",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#000000",
+    theme_color: "#000000",
+    icons: [
+      {
+        src: "/icons/icon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any maskable",
+      },
+      {
+        src: "/icons/icon-384x384.png",
+        sizes: "384x384",
+        type: "image/png",
+      },
+      {
+        src: "/icons/icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+  }
+}

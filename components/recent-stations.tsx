@@ -12,7 +12,7 @@ export default function RecentStations({ stations, onStationClick }: RecentStati
   if (!stations.length) return null
 
   return (
-    <Card className="border-zinc-800">
+    <Card className="border-zinc-200 dark:border-zinc-800">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium">Son Bakılan Duraklar</CardTitle>
       </CardHeader>
@@ -24,7 +24,7 @@ export default function RecentStations({ stations, onStationClick }: RecentStati
               onClick={() => onStationClick(station.id)}
               variant="outline"
               size="sm"
-              className="h-8 bg-zinc-900 border-zinc-800 hover:bg-zinc-800"
+              className="h-8 bg-zinc-100 border-zinc-300 hover:bg-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-800"
             >
               {station.name} ({station.id})
             </Button>
