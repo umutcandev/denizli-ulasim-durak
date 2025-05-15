@@ -6,6 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://akillidurak.vercel.app/sitemap.xml",
+    sitemap: "https://www.denizliotobus.site/sitemap.xml",
   }
 }

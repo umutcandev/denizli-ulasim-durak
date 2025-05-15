@@ -46,7 +46,7 @@ Uygulamayı geliştirme modunda çalıştırmak için tarayıcınızda [http://l
 
 ## Canlı Demo
 
-Projenin canlı versiyonuna [https://denizli-ulasim-durak.vercel.app](https://denizli-ulasim-durak.vercel.app) adresinden ulaşabilirsiniz.
+Projenin canlı versiyonuna [https://www.denizliotobus.site](https://www.denizliotobus.site) adresinden ulaşabilirsiniz.
 
 ## İletişim
 

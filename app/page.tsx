@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import MobileBottomSpace from "@/components/mobile-bottom-space"
 import Image from "next/image"
+import Link from "next/link"
 import { Bus, MapPin } from "lucide-react"
 
 export default function Home() {
@@ -47,8 +48,7 @@ export default function Home() {
     const isLocalhost = Boolean(
       window.location.hostname === "localhost" ||
         window.location.hostname === "[::1]" ||
-        window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/) ||
-        window.location.hostname.includes("vusercontent.net"), // Vercel preview ortamı
+        window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/),
     )
 
     // Service worker'ı sadece production ortamında kaydet
@@ -148,10 +148,19 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div className="flex items-center">
               <div className="pl-2 mr-3 sm:mr-4">
-                <Image src="/images/logo-twins.png" alt="Logo" width={60} height={60} className="object-contain" />
+                <Image 
+                  src="/images/logo-twins.png" 
+                  alt="Logo" 
+                  width={60} 
+                  height={60} 
+                  className="object-contain" 
+                  loading="lazy"
+                />
               </div>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold">Denizli Akıllı Durak</h1>
+                <Link href="/">
+                  <h1 className="text-xl sm:text-2xl font-bold">Denizli Akıllı Durak</h1>
+                </Link>
                 <p className="text-xs text-gray-400">Denizli Ulaşım'ın durak saatleri için hazırlanmıştır.</p>
               </div>
             </div>

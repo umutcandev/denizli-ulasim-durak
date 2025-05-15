@@ -2,7 +2,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RefreshProgress } from "@/components/refresh-progress"
 import { Button } from "@/components/ui/button"
-import { ExternalLink } from "lucide-react"
+import { ExternalLink, MoreHorizontal, Copy, Map, Route } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface BusData {
   stationName: string
@@ -54,6 +60,28 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   // Otobüs hattı detayları sayfasına yönlendirme
   const navigateToBusRoute = (busNumber: string) => {
     window.open(`https://ulasim.denizli.bel.tr/?page=hatBilgi&hatNo=${busNumber}`, "_blank")
+  }
+  
+  // Hat numarasını kopyala
+  const copyBusNumber = (busNumber: string) => {
+    navigator.clipboard.writeText(busNumber)
+      .then(() => {
+        // İsteğe bağlı olarak bir bildirim gösterilebilir
+        console.log(`Hat ${busNumber} kopyalandı`)
+      })
+      .catch(err => {
+        console.error('Kopyalama hatası:', err)
+      })
+  }
+  
+  // Güzergah detaylarını göster
+  const showRouteDetails = (busNumber: string, routeName: string) => {
+    window.open(`https://ulasim.denizli.bel.tr/?page=hatBilgi&hatNo=${busNumber}#guzergah`, "_blank")
+  }
+  
+  // Durak haritasını göster
+  const showStationMap = (stationId: string) => {
+    window.open(`https://ulasim.denizli.bel.tr/?page=harita&durakId=${stationId}`, "_blank")
   }
 
   return (
@@ -122,15 +150,27 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                       </TableCell>
                       <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4">
                         {busNumber !== "-" && (
-                          <Button 
-                            onClick={() => navigateToBusRoute(busNumber)}
-                            variant="outline" 
-                            size="sm"
-                            className="h-7 sm:h-9 px-2 sm:px-3 min-w-0 flex items-center gap-1"
-                          >
-                            <span className="hidden sm:inline">Otobüse İlerle</span>
-                            <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 sm:h-9 px-2 sm:px-3 min-w-0"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => navigateToBusRoute(busNumber)}>
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                <span>Otobüs detayları</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => window.open(`https://ulasim.denizli.bel.tr/map.html?hatNo=${busNumber}`, "_blank")}>
+                                <Map className="mr-2 h-4 w-4" />
+                                <span>Haritada göster</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </TableCell>
                     </TableRow>

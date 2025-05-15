@@ -28,14 +28,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://akillidurak.vercel.app"),
+  metadataBase: new URL("https://www.denizliotobus.site"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "Denizli Akıllı Durak | Otobüs Bilgi Sistemi",
     description: "Denizli Büyükşehir Belediyesi Akıllı Durak Sistemi ile otobüs saatlerini öğrenin.",
-    url: "https://akillidurak.vercel.app",
+    url: "https://www.denizliotobus.site",
     siteName: "Denizli Akıllı Durak",
     locale: "tr_TR",
     type: "website",
@@ -58,8 +58,7 @@ export const metadata: Metadata = {
     title: "Denizli Akıllı Durak",
     statusBarStyle: "black-translucent",
     capable: true,
-  },
-  generator: 'v0.dev'
+  }
 }
 
 export default function RootLayout({
