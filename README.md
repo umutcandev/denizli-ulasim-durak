@@ -1,5 +1,5 @@
 # Denizli Ulaşım Durak
-
+![ulaşım durak](https://github.com/user-attachments/assets/f34b6656-73b8-484d-b2a3-0cde2860f4e7)
 Denizli'deki toplu taşıma durakları ve otobüs hatları hakkında bilgi veren bir web uygulaması.
 
 ## Proje Hakkında
