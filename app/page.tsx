@@ -189,7 +189,7 @@ export default function Home() {
                 </div>
               </div>
             ) : loading ? (
-              <BusScheduleSkeleton />
+              <BusScheduleSkeleton stationName={busData?.stationName} stationId={busData?.stationId} />
             ) : error ? (
               <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800/30 p-6 text-center">
                 {error}
