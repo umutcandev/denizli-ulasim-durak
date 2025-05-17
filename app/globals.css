@@ -111,4 +111,17 @@
   .time-tag-danger {
     @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
   }
+
+  /* Otobüs saatleri resim diyaloğu için stiller */
+  .bus-schedule-image {
+    @apply w-auto max-w-full h-auto object-contain mx-auto;
+  }
+
+  .bus-schedule-dialog-content {
+    @apply sm:max-w-[90%] md:max-w-[80%] lg:max-w-[70%] max-h-[90vh] overflow-y-auto;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full h-12 w-12 border-b-2 border-primary;
+  }
 }

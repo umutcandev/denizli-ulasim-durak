@@ -28,7 +28,7 @@ export default function StationInput({ onSubmit, isLoading }: StationInputProps)
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl">Durak Bilgisi</CardTitle>
           <a
-            href="https://github.com/umutcandev"
+            href="https://github.com/umutcandev/denizli-ulasim-durak"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 transition-colors"
