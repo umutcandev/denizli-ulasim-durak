@@ -124,4 +124,25 @@
   .loading-spinner {
     @apply animate-spin rounded-full h-12 w-12 border-b-2 border-primary;
   }
+  
+  /* Yumuşak geçiş animasyonları */
+  .row-details-container {
+    @apply overflow-hidden transition-all duration-300 ease-in-out;
+  }
+  
+  .row-details-enter {
+    @apply max-h-0 opacity-0;
+  }
+  
+  .row-details-enter-active {
+    @apply max-h-96 opacity-100;
+  }
+  
+  .row-details-exit {
+    @apply max-h-96 opacity-100;
+  }
+  
+  .row-details-exit-active {
+    @apply max-h-0 opacity-0;
+  }
 }
