@@ -199,7 +199,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                         remainingTime = "Gelmek Üzere"
                         minutes = 0
                       } else if (hours > 0) {
-                        remainingTime = `${hours}s ${mins}d`
+                        remainingTime = `${hours}s ${mins}dk`
                       } else {
                         remainingTime = `${mins}dk`
                       }
@@ -234,7 +234,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                           </TableCell>
                           <TableCell className="p-2 px-1 sm:p-4 max-w-[120px] sm:max-w-none truncate">{bus.hatadi || "-"}</TableCell>
                           <TableCell className="text-right p-2 px-1 sm:p-4">
-                            <span className={timeTagClass}>{remainingTime}</span>
+                            <span className={`${timeTagClass} whitespace-nowrap`}>{remainingTime}</span>
                           </TableCell>
                           <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
                             {busNumber !== "-" && (
@@ -288,8 +288,8 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                                     </div>
                                   </div>
                                   <div>
-                                    <div className="font-semibold text-zinc-500 dark:text-zinc-400">İlk Kalkışa Kalan</div>
-                                    <div>
+                                    <div className="font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap">Kalkışa Kalan Süre</div>
+                                    <div className="whitespace-nowrap">
                                       {bus.kalkisaKadarkiDakika <= 0 ? 
                                         "Otobüs Hareket Halinde" : 
                                         bus.kalkisaKadarkiDakika !== undefined ? 
