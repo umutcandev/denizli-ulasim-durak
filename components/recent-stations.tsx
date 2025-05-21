@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { HistoryIcon } from "lucide-react"
 
 interface RecentStationsProps {
@@ -16,9 +16,9 @@ export default function RecentStations({ stations, onStationClick }: RecentStati
     <Card className="border-zinc-200 dark:border-zinc-800 overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">Son Bakılan Duraklar</CardTitle>
-        <p className="text-xs text-muted-foreground mt-1">
+        <CardDescription className="mt-1">
           Son 10 bakılan durak burada listelenir. Tarayıcı hafızasında saklanır ve 30 gün boyunca kaybolmaz.
-        </p>
+        </CardDescription>
       </CardHeader>
       <CardContent className="pb-4">
         <div className="flex flex-wrap gap-1.5">

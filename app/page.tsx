@@ -10,6 +10,20 @@ import MobileBottomSpace from "@/components/mobile-bottom-space"
 import Image from "next/image"
 import Link from "next/link"
 import { Bus, MapPin } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
+
+// Otobüs saatleri JSON endpointi
+const BUS_SCHEDULE_JSON_URL = "/api/bus-schedule-search"
 
 export default function Home() {
   const [stationId, setStationId] = useState<string>("")
@@ -19,6 +33,14 @@ export default function Home() {
   const [recentStations, setRecentStations] = useState<Array<{ id: string; name: string }>>([])
   const [currentTime, setCurrentTime] = useState<string>("")
   const scheduleRef = useRef<HTMLDivElement>(null)
+
+  // Otobüs Saatleri Sorgulama State'leri
+  const [busScheduleInputValue, setBusScheduleInputValue] = useState("")
+  const [busScheduleLoading, setBusScheduleLoading] = useState(false)
+  const [busScheduleError, setBusScheduleError] = useState("")
+  const [busScheduleImageUrl, setBusScheduleImageUrl] = useState("")
+  const [busScheduleDialogBusNumber, setBusScheduleDialogBusNumber] = useState("")
+  const [isBusScheduleDialogOpen, setIsBusScheduleDialogOpen] = useState(false)
 
   // Tarayıcı tarafında çalıştığında zamanı ayarla
   useEffect(() => {
@@ -141,6 +163,46 @@ export default function Home() {
     setStationId(id)
   }
 
+  // Otobüs Saatleri Sorgulama Fonksiyonları
+  const openBusScheduleDialog = () => {
+    setIsBusScheduleDialogOpen(true)
+    setBusScheduleError("") // Dialog açıldığında eski hataları temizle
+    setBusScheduleImageUrl("") // Dialog açıldığında eski resmi temizle
+    setBusScheduleInputValue("") // Dialog açıldığında inputu temizle
+  }
+
+  // Otobüs Saatleri Sorgulama (Dialog İçin)
+  const handleBusScheduleSearchInDialog = async () => {
+    setBusScheduleError("")
+    setBusScheduleLoading(true)
+    setBusScheduleImageUrl("") // Yeni arama öncesi eski resmi temizle
+    try {
+      const res = await fetch(BUS_SCHEDULE_JSON_URL)
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || `API isteği başarısız: ${res.status}`)
+      }
+      const data = await res.json()
+      const found = data.otobus.find((bus: any) => bus.HatNo === busScheduleInputValue.trim())
+      if (found && found.SaatResim) {
+        setBusScheduleDialogBusNumber(found.HatNo) // Bu state dialog başlığında kullanılabilir
+        setBusScheduleImageUrl(found.SaatResim)
+      } else {
+        setBusScheduleError("Girilen numarada otobüs bulunamadı veya saat bilgisi yok.")
+      }
+    } catch (e: any) {
+      setBusScheduleError(e.message || "Veri alınırken bir hata oluştu.")
+    } finally {
+      setBusScheduleLoading(false)
+    }
+  }
+
+  const handleBusScheduleKeyDownInDialog = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleBusScheduleSearchInDialog()
+    }
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -172,7 +234,11 @@ export default function Home() {
         </div>
 
         <div className="space-y-6">
-          <StationInput onSubmit={handleStationSubmit} isLoading={loading} />
+          <StationInput 
+            onSubmit={handleStationSubmit} 
+            isLoading={loading} 
+            onShowBusTimesClick={openBusScheduleDialog} 
+          />
 
           {recentStations.length > 0 && (
             <RecentStations stations={recentStations} onStationClick={handleRecentStationClick} />
@@ -203,6 +269,67 @@ export default function Home() {
           <MobileBottomSpace />
         </div>
       </div>
+
+      {/* Yeni Otobüs Saatleri Dialog */}
+      <Dialog open={isBusScheduleDialogOpen} onOpenChange={setIsBusScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-md flex flex-col max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Otobüs Saatlerini Sorgula</DialogTitle>
+            <DialogDescription>
+              Otobüs hat numarasını girerek ({busScheduleDialogBusNumber ? `${busScheduleDialogBusNumber} için gösteriliyor` : "örn: 190"}) saatlerini görüntüleyebilirsiniz.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2 flex-grow overflow-y-auto">
+            <div className="flex items-center space-x-2 px-1">
+              <Input 
+                id="bus-schedule-input-dialog"
+                type="text"
+                placeholder="Otobüs hat numarasını girin"
+                value={busScheduleInputValue}
+                onChange={(e) => setBusScheduleInputValue(e.target.value)}
+                onKeyDown={handleBusScheduleKeyDownInDialog}
+                disabled={busScheduleLoading}
+                className="flex-grow"
+                autoFocus
+              />
+              <Button 
+                onClick={handleBusScheduleSearchInDialog} 
+                disabled={busScheduleLoading || !busScheduleInputValue}
+              >
+                Sorgula
+              </Button>
+            </div>
+            {busScheduleLoading && <p className="text-sm text-center text-muted-foreground">Getiriliyor...</p>}
+            {busScheduleError && <p className="text-sm text-center text-red-500">{busScheduleError}</p>}
+            {busScheduleImageUrl && (
+              <div className="mt-4 border rounded-lg overflow-hidden">
+                <Image
+                  src={busScheduleImageUrl} 
+                  alt={`${busScheduleDialogBusNumber || 'Otobüs'} Hat Saatleri`}
+                  width={700}
+                  height={1000}
+                  style={{ 
+                    width: '100%', 
+                    height: 'auto',
+                    display: 'block'
+                  }} 
+                  onLoad={() => console.log("Image loaded: ", busScheduleImageUrl)} 
+                  onError={() => setBusScheduleError("Saat görseli yüklenemedi.")} 
+                  priority 
+                  unoptimized 
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter className="sm:justify-start mt-auto">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Kapat
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
