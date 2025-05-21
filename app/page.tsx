@@ -300,9 +300,9 @@ export default function Home() {
               </Button>
             </div>
             {busScheduleLoading && <p className="text-sm text-center text-muted-foreground">Getiriliyor...</p>}
-            {busScheduleError && <p className="text-sm text-center text-red-500">{busScheduleError}</p>}
+            {busScheduleError && <p className="text-sm text-center text-destructive">{busScheduleError}</p>}
             {busScheduleImageUrl && (
-              <div className="mt-4 border rounded-lg overflow-hidden">
+              <div className="mt-4 border-border rounded-lg overflow-hidden">
                 <Image
                   src={busScheduleImageUrl} 
                   alt={`${busScheduleDialogBusNumber || 'Otobüs'} Hat Saatleri`}
