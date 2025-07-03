@@ -25,6 +25,14 @@ import {
 // Otobüs saatleri JSON endpointi
 const BUS_SCHEDULE_JSON_URL = "/api/bus-schedule-search"
 
+// Otobüs hattı verisi için tip tanımı
+interface BusRoute {
+  HatNo: string;
+  HatAdi: string;
+  SaatResim: string;
+  onemli_duraklar?: string;
+}
+
 export default function Home() {
   const [stationId, setStationId] = useState<string>("")
   const [busData, setBusData] = useState<any>(null)
@@ -41,6 +49,11 @@ export default function Home() {
   const [busScheduleImageUrl, setBusScheduleImageUrl] = useState("")
   const [busScheduleDialogBusNumber, setBusScheduleDialogBusNumber] = useState("")
   const [isBusScheduleDialogOpen, setIsBusScheduleDialogOpen] = useState(false)
+  const [isImageLightboxOpen, setIsImageLightboxOpen] = useState(false)
+
+  // Canlı arama için state'ler
+  const [allBusRoutes, setAllBusRoutes] = useState<BusRoute[]>([])
+  const [filteredBusRoutes, setFilteredBusRoutes] = useState<BusRoute[]>([])
 
   // Tarayıcı tarafında çalıştığında zamanı ayarla
   useEffect(() => {
@@ -101,6 +114,37 @@ export default function Home() {
       }
     }
   }, [])
+
+  // Sayfa yüklendiğinde ve dialog açıldığında tüm otobüs hatlarını çek
+  useEffect(() => {
+    const fetchAllBusRoutes = async () => {
+      // Eğer zaten çekilmişse tekrar çekme
+      if (allBusRoutes.length > 0) return
+
+      try {
+        const res = await fetch(BUS_SCHEDULE_JSON_URL)
+        if (!res.ok) {
+          throw new Error("Otobüs hatları yüklenemedi.")
+        }
+        const data = await res.json()
+        if (data && data.otobus) {
+          // Gelen veride "D" içeren HatNo'ları temizle
+          const cleanedRoutes = data.otobus.map((route: any) => ({
+            ...route,
+            HatNo: route.HatNo.replace("D", ""),
+          }))
+          setAllBusRoutes(cleanedRoutes)
+        }
+      } catch (error) {
+        console.error("Tüm otobüs hatları çekilirken hata:", error)
+        // Hata durumunda kullanıcıya bilgi verilebilir, şimdilik konsola yazıyoruz.
+      }
+    }
+
+    if (isBusScheduleDialogOpen) {
+      fetchAllBusRoutes()
+    }
+  }, [isBusScheduleDialogOpen, allBusRoutes.length])
 
   // Veri çekme fonksiyonu
   const loadBusData = useCallback(async () => {
@@ -169,24 +213,32 @@ export default function Home() {
     setBusScheduleError("") // Dialog açıldığında eski hataları temizle
     setBusScheduleImageUrl("") // Dialog açıldığında eski resmi temizle
     setBusScheduleInputValue("") // Dialog açıldığında inputu temizle
+    setFilteredBusRoutes([]) // Dialog açıldığında önerileri temizle
+    setIsImageLightboxOpen(false) // Lightbox'ı da kapat
   }
 
-  // Otobüs Saatleri Sorgulama (Dialog İçin)
-  const handleBusScheduleSearchInDialog = async () => {
+  // Otobüs Saatleri Sorgulama (Dialog İçin) - artık isteğe bağlı hatNo alabiliyor
+  const handleBusScheduleSearchInDialog = async (hatNo?: string) => {
+    const searchTerm = (hatNo || busScheduleInputValue).trim()
+    if (!searchTerm) return
+
     setBusScheduleError("")
     setBusScheduleLoading(true)
     setBusScheduleImageUrl("") // Yeni arama öncesi eski resmi temizle
+    setFilteredBusRoutes([]) // Aramayı başlatınca önerileri temizle
+    
     try {
-      const res = await fetch(BUS_SCHEDULE_JSON_URL)
-      if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.error || `API isteği başarısız: ${res.status}`)
+      // `allBusRoutes` state'i zaten dolu, tekrar fetch yapmaya gerek yok.
+      if (allBusRoutes.length === 0) {
+        throw new Error("Otobüs hat listesi henüz yüklenmedi.")
       }
-      const data = await res.json()
-      const found = data.otobus.find((bus: any) => bus.HatNo === busScheduleInputValue.trim())
+      
+      const found = allBusRoutes.find((bus: BusRoute) => bus.HatNo === searchTerm)
+
       if (found && found.SaatResim) {
-        setBusScheduleDialogBusNumber(found.HatNo) // Bu state dialog başlığında kullanılabilir
+        setBusScheduleDialogBusNumber(found.HatNo)
         setBusScheduleImageUrl(found.SaatResim)
+        setBusScheduleInputValue(found.HatNo) // Input'u da güncelle
       } else {
         setBusScheduleError("Girilen numarada otobüs bulunamadı veya saat bilgisi yok.")
       }
@@ -201,6 +253,30 @@ export default function Home() {
     if (e.key === "Enter") {
       handleBusScheduleSearchInDialog()
     }
+  }
+
+  // Canlı arama için input değişimini yöneten fonksiyon
+  const handleBusInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setBusScheduleInputValue(value)
+    setBusScheduleImageUrl("") // Yazmaya başlayınca resmi temizle
+    setBusScheduleError("") // Yazmaya başlayınca hatayı temizle
+
+    if (value.trim() === "") {
+      setFilteredBusRoutes([])
+    } else {
+      const filtered = allBusRoutes
+        .filter(bus => bus.HatNo.startsWith(value))
+        .slice(0, 10) // Performans için sonuçları sınırla
+      setFilteredBusRoutes(filtered)
+    }
+  }
+
+  // Öneri listesinden bir hat seçildiğinde
+  const handleSuggestionClick = (hatNo: string) => {
+    setBusScheduleInputValue(hatNo)
+    setFilteredBusRoutes([])
+    handleBusScheduleSearchInDialog(hatNo) // Seçilen hat için aramayı direkt yap
   }
 
   return (
@@ -279,57 +355,121 @@ export default function Home() {
               Otobüs hat numarasını girerek ({busScheduleDialogBusNumber ? `${busScheduleDialogBusNumber} için gösteriliyor` : "örn: 190"}) saatlerini görüntüleyebilirsiniz.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2 flex-grow overflow-y-auto">
-            <div className="flex items-center space-x-2 px-1">
-              <Input 
-                id="bus-schedule-input-dialog"
-                type="text"
-                placeholder="Otobüs hat numarasını girin"
-                value={busScheduleInputValue}
-                onChange={(e) => setBusScheduleInputValue(e.target.value)}
-                onKeyDown={handleBusScheduleKeyDownInDialog}
-                disabled={busScheduleLoading}
-                className="flex-grow"
-                autoFocus
-              />
-              <Button 
-                onClick={handleBusScheduleSearchInDialog} 
-                disabled={busScheduleLoading || !busScheduleInputValue}
-              >
-                Sorgula
-              </Button>
-            </div>
-            {busScheduleLoading && <p className="text-sm text-center text-muted-foreground">Getiriliyor...</p>}
-            {busScheduleError && <p className="text-sm text-center text-destructive">{busScheduleError}</p>}
-            {busScheduleImageUrl && (
-              <div className="mt-4 border-border rounded-lg overflow-hidden">
-                <Image
-                  src={busScheduleImageUrl} 
-                  alt={`${busScheduleDialogBusNumber || 'Otobüs'} Hat Saatleri`}
-                  width={700}
-                  height={1000}
-                  style={{ 
-                    width: '100%', 
-                    height: 'auto',
-                    display: 'block'
-                  }} 
-                  onLoad={() => console.log("Image loaded: ", busScheduleImageUrl)} 
-                  onError={() => setBusScheduleError("Saat görseli yüklenemedi.")} 
-                  priority 
-                  unoptimized 
+
+          <div className="space-y-4 p-1 flex-grow flex flex-col">
+            {/* Arama alanı */}
+            <div className="relative">
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="bus-schedule-input-dialog"
+                  type="text"
+                  placeholder="Otobüs hat numarası girin"
+                  value={busScheduleInputValue}
+                  onChange={handleBusInputChange}
+                  onKeyDown={handleBusScheduleKeyDownInDialog}
+                  disabled={busScheduleLoading}
+                  className="flex-grow"
+                  autoComplete="off"
+                  autoFocus
                 />
+                <Button
+                  onClick={() => handleBusScheduleSearchInDialog()}
+                  disabled={busScheduleLoading || !busScheduleInputValue}
+                >
+                  Sorgula
+                </Button>
               </div>
-            )}
+              {filteredBusRoutes.length > 0 && (
+                <div className="absolute z-50 w-full bg-card border border-border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                  <ul>
+                    {filteredBusRoutes.map((bus) => (
+                      <li
+                        key={bus.HatNo}
+                        className="px-3 py-2 cursor-pointer hover:bg-muted flex items-center gap-2"
+                        onClick={() => handleSuggestionClick(bus.HatNo)}
+                      >
+                        <span className="font-bold flex-shrink-0">{bus.HatNo}</span>
+                        <span className="text-muted-foreground flex-shrink-0">-</span>
+                        <span className="text-sm text-muted-foreground font-normal truncate min-w-0">
+                          {bus.onemli_duraklar || bus.HatAdi || 'Bilgi yok'}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Sonuç Alanı */}
+            <div className="flex-grow overflow-y-auto pt-2 max-h-[50vh]">
+              {busScheduleLoading && (
+                <p className="text-sm text-center text-muted-foreground pt-2">
+                  Getiriliyor...
+                </p>
+              )}
+              {busScheduleError && (
+                <p className="text-sm text-center text-destructive pt-2">
+                  {busScheduleError}
+                </p>
+              )}
+
+              {busScheduleImageUrl && (
+                <div className="mt-2">
+                  <button
+                    onClick={() => setIsImageLightboxOpen(true)}
+                    className="relative w-full h-auto max-h-[45vh] cursor-zoom-in group block overflow-hidden"
+                    aria-label="Otobüs saatleri görselini büyüt"
+                  >
+                    <Image
+                      src={busScheduleImageUrl}
+                      alt={`${busScheduleDialogBusNumber} nolu otobüsün sefer saatleri`}
+                      width={400}
+                      height={600}
+                      style={{ objectFit: 'contain', width: '100%', height: 'auto', maxHeight: '45vh' }}
+                      className="rounded-md"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                      <p className="text-white font-semibold">Büyütmek için tıkla</p>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <DialogFooter className="sm:justify-start mt-auto">
+          
+          <DialogFooter className="sm:justify-start px-1 pb-2 border-t pt-4">
             <DialogClose asChild>
-              <Button type="button" variant="secondary">
+              <Button type="button" variant="secondary" className="w-full">
                 Kapat
               </Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Image Lightbox Dialog */}
+      {busScheduleImageUrl && (
+        <Dialog open={isImageLightboxOpen} onOpenChange={setIsImageLightboxOpen}>
+          <DialogContent className="max-w-fit h-auto max-h-[90vh] p-0 flex items-center justify-center border-0 bg-transparent shadow-none">
+            <DialogHeader className="sr-only">
+              <DialogTitle>{busScheduleDialogBusNumber} Nolu Otobüs Saatleri - Büyük Görünüm</DialogTitle>
+              <DialogDescription>
+                Bu, {busScheduleDialogBusNumber} nolu otobüs hattının sefer saatlerini gösteren büyütülmüş bir görseldir.
+              </DialogDescription>
+            </DialogHeader>
+            <Image
+              src={busScheduleImageUrl}
+              alt={`${busScheduleDialogBusNumber} nolu otobüsün sefer saatleri - büyük görünüm`}
+              width={700}
+              height={990}
+              style={{ objectFit: 'contain', width: 'auto', height: 'auto', maxHeight: '90vh', maxWidth: '90vw' }}
+              className="rounded-lg"
+              unoptimized
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </main>
   )
 }
