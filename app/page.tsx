@@ -216,6 +216,31 @@ export default function Home() {
     setBusScheduleInputValue("") // Dialog açıldığında inputu temizle
     setFilteredBusRoutes([]) // Dialog açıldığında önerileri temizle
     setIsImageLightboxOpen(false) // Lightbox'ı da kapat
+    
+    // Otobüs hatlarını hemen çek
+    fetchAllBusRoutes()
+  }
+
+  // Tüm otobüs hatlarını çekme fonksiyonu
+  const fetchAllBusRoutes = async () => {
+    try {
+      const res = await fetch(BUS_SCHEDULE_JSON_URL)
+      if (!res.ok) {
+        throw new Error("Otobüs hatları yüklenemedi.")
+      }
+      const data = await res.json()
+      if (data && data.otobus) {
+        // Gelen veride "D" içeren HatNo'ları temizle
+        const cleanedRoutes = data.otobus.map((route: any) => ({
+          ...route,
+          HatNo: route.HatNo.replace("D", ""),
+        }))
+        setAllBusRoutes(cleanedRoutes)
+      }
+    } catch (error) {
+      console.error("Tüm otobüs hatları çekilirken hata:", error)
+      setBusScheduleError("Otobüs hatları yüklenirken bir hata oluştu.")
+    }
   }
 
   // Otobüs Saatleri Sorgulama (Dialog İçin) - artık isteğe bağlı hatNo alabiliyor
