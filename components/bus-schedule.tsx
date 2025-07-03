@@ -216,7 +216,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                         <TableRow
                           key={`row-${index}`}
                           className={`border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer ${
-                            isExpanded ? "bg-zinc-50 dark:bg-zinc-900" : ""
+                            isExpanded ? "bg-zinc-50 dark:bg-zinc-900 border-b-0" : ""
                           }`}
                           onClick={() => toggleRowExpansion(index)}
                         >
@@ -268,7 +268,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                             )}
                           </TableCell>
                         </TableRow>
-                        <TableRow key={`detail-${index}`} className="border-t-0 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                        <TableRow key={`detail-${index}`} className="border-t-0 border-b-0 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                           <TableCell colSpan={4} className="p-0">
                             <div className={`row-details-container ${isExpanded ? 'row-details-enter-active' : 'row-details-enter'}`}>
                               <div className="p-3 px-4 sm:px-6">
