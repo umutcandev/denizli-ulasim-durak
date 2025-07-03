@@ -9,7 +9,7 @@ import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import MobileBottomSpace from "@/components/mobile-bottom-space"
 import Image from "next/image"
 import Link from "next/link"
-import { Bus, MapPin } from "lucide-react"
+import { Bus, MapPin, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -30,7 +30,7 @@ interface BusRoute {
   HatNo: string;
   HatAdi: string;
   SaatResim: string;
-  onemli_duraklar?: string;
+  GuzergahIsmi?: string;
 }
 
 export default function Home() {
@@ -54,6 +54,7 @@ export default function Home() {
   // Canlı arama için state'ler
   const [allBusRoutes, setAllBusRoutes] = useState<BusRoute[]>([])
   const [filteredBusRoutes, setFilteredBusRoutes] = useState<BusRoute[]>([])
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true)
 
   // Tarayıcı tarafında çalıştığında zamanı ayarla
   useEffect(() => {
@@ -264,12 +265,21 @@ export default function Home() {
 
     if (value.trim() === "") {
       setFilteredBusRoutes([])
+      setShowScrollIndicator(true)
     } else {
       const filtered = allBusRoutes
         .filter(bus => bus.HatNo.startsWith(value))
         .slice(0, 10) // Performans için sonuçları sınırla
       setFilteredBusRoutes(filtered)
+      setShowScrollIndicator(true) // Yeni arama yapıldığında göstergeyi tekrar göster
     }
+  }
+
+  // Scroll pozisyonunu kontrol eden fonksiyon
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5 // 5px tolerans
+    setShowScrollIndicator(!isAtBottom)
   }
 
   // Öneri listesinden bir hat seçildiğinde
@@ -380,22 +390,35 @@ export default function Home() {
                 </Button>
               </div>
               {filteredBusRoutes.length > 0 && (
-                <div className="absolute z-50 w-full bg-card border border-border rounded-md shadow-lg bottom-full mb-1 max-h-60 overflow-y-auto">
-                  <ul>
-                    {filteredBusRoutes.map((bus) => (
-                      <li
-                        key={bus.HatNo}
-                        className="px-3 py-2 cursor-pointer hover:bg-muted flex items-center gap-2"
-                        onClick={() => handleSuggestionClick(bus.HatNo)}
-                      >
-                        <span className="font-bold flex-shrink-0">{bus.HatNo}</span>
-                        <span className="text-muted-foreground flex-shrink-0">-</span>
-                        <span className="text-sm text-muted-foreground font-normal truncate min-w-0">
-                          {bus.onemli_duraklar || bus.HatAdi || 'Bilgi yok'}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="absolute z-50 w-full bg-card border border-border rounded-md shadow-lg bottom-full mb-1 max-h-60 overflow-hidden">
+                  <div 
+                    className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+                    onScroll={handleScroll}
+                  >
+                    <ul>
+                      {filteredBusRoutes.map((bus) => (
+                        <li
+                          key={bus.HatNo}
+                          className="px-3 py-2 cursor-pointer hover:bg-muted flex items-center gap-2"
+                          onClick={() => handleSuggestionClick(bus.HatNo)}
+                        >
+                          <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded font-bold flex-shrink-0">{bus.HatNo}</span>
+                          <span className="text-sm text-muted-foreground font-normal truncate min-w-0">
+                            {bus.GuzergahIsmi || bus.HatAdi || 'Bilgi yok'}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {/* Scroll indicator and fade effect */}
+                  {filteredBusRoutes.length > 5 && showScrollIndicator && (
+                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent pointer-events-none flex items-end justify-center pb-1">
+                      <div className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span>↓</span>
+                        <span>{filteredBusRoutes.length - 5}+ hat</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -429,8 +452,8 @@ export default function Home() {
                       className="rounded-md"
                       unoptimized
                     />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
-                      <p className="text-white font-semibold">Büyütmek için tıkla</p>
+                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/60 text-white p-2 rounded-full">
+                      <Search className="h-4 w-4" />
                     </div>
                   </button>
                 </div>
