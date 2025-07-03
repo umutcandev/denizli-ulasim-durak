@@ -380,7 +380,7 @@ export default function Home() {
                 </Button>
               </div>
               {filteredBusRoutes.length > 0 && (
-                <div className="absolute z-50 w-full bg-card border border-border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                <div className="absolute z-50 w-full bg-card border border-border rounded-md shadow-lg bottom-full mb-1 max-h-60 overflow-y-auto">
                   <ul>
                     {filteredBusRoutes.map((bus) => (
                       <li
