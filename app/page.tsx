@@ -486,7 +486,7 @@ export default function Home() {
             </div>
           </div>
           
-          <DialogFooter className="sm:justify-start px-1 pb-2 border-t pt-4">
+          <DialogFooter className="sm:justify-start px-1 pb-2">
             <DialogClose asChild>
               <Button type="button" variant="secondary" className="w-full">
                 Kapat
