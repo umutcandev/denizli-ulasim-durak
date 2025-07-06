@@ -17,7 +17,7 @@ export default function RecentStations({ stations, onStationClick }: RecentStati
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">Son Bakılan Duraklar</CardTitle>
         <CardDescription className="mt-1">
-          Son 10 bakılan durak burada listelenir. Tarayıcı hafızasında saklanır ve 30 gün boyunca kaybolmaz.
+          Son bakılan duraklar burada listelenir. Tarayıcı hafızasında saklanır ve kaybolmaz.
         </CardDescription>
       </CardHeader>
       <CardContent className="pb-4">
