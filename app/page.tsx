@@ -57,6 +57,7 @@ export default function Home() {
   const [allBusRoutes, setAllBusRoutes] = useState<BusRoute[]>([])
   const [filteredBusRoutes, setFilteredBusRoutes] = useState<BusRoute[]>([])
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
+  const [isFilterLoading, setIsFilterLoading] = useState(false)
 
   // Tarayıcı tarafında çalıştığında zamanı ayarla
   useEffect(() => {
@@ -127,36 +128,7 @@ export default function Home() {
     }
   }, [])
 
-  // Sayfa yüklendiğinde ve dialog açıldığında tüm otobüs hatlarını çek
-  useEffect(() => {
-    const fetchAllBusRoutes = async () => {
-      // Eğer zaten çekilmişse tekrar çekme
-      if (allBusRoutes.length > 0) return
-
-      try {
-        const res = await fetch(BUS_SCHEDULE_JSON_URL)
-        if (!res.ok) {
-          throw new Error("Otobüs hatları yüklenemedi.")
-        }
-        const data = await res.json()
-        if (data && data.otobus) {
-          // Gelen veride "D" içeren HatNo'ları temizle
-          const cleanedRoutes = data.otobus.map((route: any) => ({
-            ...route,
-            HatNo: route.HatNo.replace("D", ""),
-          }))
-          setAllBusRoutes(cleanedRoutes)
-        }
-      } catch (error) {
-        console.error("Tüm otobüs hatları çekilirken hata:", error)
-        // Hata durumunda kullanıcıya bilgi verilebilir, şimdilik konsola yazıyoruz.
-      }
-    }
-
-    if (isBusScheduleDialogOpen) {
-      fetchAllBusRoutes()
-    }
-  }, [isBusScheduleDialogOpen, allBusRoutes.length])
+  // Bu useEffect artık kullanılmıyor - API çağrıları handleBusInputChange içinde yapılıyor
 
   // Veri çekme fonksiyonu
   const loadBusData = useCallback(async () => {
@@ -227,9 +199,53 @@ export default function Home() {
     setStationId(id)
   }
 
-  const handleRecentLineClick = (line: string) => {
+  const handleRecentLineClick = async (line: string) => {
     setBusScheduleInputValue(line)
-    handleBusScheduleSearchInDialog(line)
+    
+    // Eğer veriler henüz yüklenmemişse, önce veriyi yükle
+    if (allBusRoutes.length === 0) {
+      setBusScheduleLoading(true)
+      setBusScheduleError("")
+      setBusScheduleImageUrl("")
+      setFilteredBusRoutes([])
+      
+      try {
+        // 300ms fake gecikme ekle
+        await new Promise(resolve => setTimeout(resolve, 300))
+        
+        const res = await fetch(BUS_SCHEDULE_JSON_URL)
+        if (!res.ok) {
+          throw new Error("Otobüs hatları yüklenemedi.")
+        }
+        const data = await res.json()
+        if (data && data.otobus) {
+          // Gelen veride "D" içeren HatNo'ları temizle
+          const cleanedRoutes = data.otobus.map((route: BusRoute) => ({
+            ...route,
+            HatNo: route.HatNo.replace("D", ""),
+          }))
+          setAllBusRoutes(cleanedRoutes)
+          
+          // Veri yüklendikten sonra aramayı yap
+          const found = cleanedRoutes.find((bus: BusRoute) => bus.HatNo.toUpperCase() === line.toUpperCase())
+          if (found && found.SaatResim) {
+            setBusScheduleDialogBusNumber(found.HatNo)
+            setBusScheduleImageUrl(found.SaatResim)
+            addToRecentBusLines(found.HatNo)
+          } else {
+            setBusScheduleError(`'${line}' için otobüs saatleri bulunamadı.`)
+          }
+        }
+      } catch (error) {
+        console.error("Tüm otobüs hatları çekilirken hata:", error)
+        setBusScheduleError("Otobüs hatları yüklenirken bir hata oluştu.")
+      } finally {
+        setBusScheduleLoading(false)
+      }
+    } else {
+      // Veriler zaten yüklüyse direkt arama yap
+      handleBusScheduleSearchInDialog(line)
+    }
   }
 
   // Otobüs Saatleri Sorgulama Fonksiyonları
@@ -240,9 +256,9 @@ export default function Home() {
     setBusScheduleInputValue("") // Dialog açıldığında inputu temizle
     setFilteredBusRoutes([]) // Dialog açıldığında önerileri temizle
     setIsImageLightboxOpen(false) // Lightbox'ı da kapat
+    setIsFilterLoading(false) // Loading state'ini sıfırla
     
-    // Otobüs hatlarını hemen çek
-    fetchAllBusRoutes()
+    // Artık dialog açıldığında API çağrısı yapmıyoruz
   }
 
   // Tüm otobüs hatlarını çekme fonksiyonu
@@ -255,7 +271,7 @@ export default function Home() {
       const data = await res.json()
       if (data && data.otobus) {
         // Gelen veride "D" içeren HatNo'ları temizle
-        const cleanedRoutes = data.otobus.map((route: any) => ({
+        const cleanedRoutes = data.otobus.map((route: BusRoute) => ({
           ...route,
           HatNo: route.HatNo.replace("D", ""),
         }))
@@ -278,6 +294,9 @@ export default function Home() {
     setFilteredBusRoutes([])
 
     try {
+      // 300ms fake gecikme ekle (buton loading göstermek için)
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
       if (allBusRoutes.length === 0) {
         throw new Error("Otobüs hat listesi henüz yüklenmedi.")
       }
@@ -306,8 +325,19 @@ export default function Home() {
   }
 
   // Canlı arama için input değişimini yöneten fonksiyon
-  const handleBusInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBusInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
+    
+    // Sadece sayısal karakterlere (0-9), maksimum 3 haneli ve 0 ile başlayamaz
+    if (value.length > 3) {
+      return
+    }
+    
+    // Boş string veya 1-9 ile başlayan sayılara izin ver (0 ile başlayamaz)
+    if (value !== "" && !/^[1-9][0-9]*$/.test(value)) {
+      return
+    }
+    
     setBusScheduleInputValue(value)
     setBusScheduleImageUrl("") // Yazmaya başlayınca resmi temizle
     setBusScheduleError("") // Yazmaya başlayınca hatayı temizle
@@ -315,12 +345,56 @@ export default function Home() {
     if (value.trim() === "") {
       setFilteredBusRoutes([])
       setShowScrollIndicator(true)
+      setIsFilterLoading(false)
     } else {
-      const filtered = allBusRoutes
-        .filter(bus => bus.HatNo.startsWith(value))
-        .slice(0, 10) // Performans için sonuçları sınırla
-      setFilteredBusRoutes(filtered)
-      setShowScrollIndicator(true) // Yeni arama yapıldığında göstergeyi tekrar göster
+      // Eğer veriler henüz yüklenmemişse, yükle
+      if (allBusRoutes.length === 0) {
+        setIsFilterLoading(true)
+        try {
+          // 300ms fake gecikme ekle
+          await new Promise(resolve => setTimeout(resolve, 300))
+          
+          const res = await fetch(BUS_SCHEDULE_JSON_URL)
+          if (!res.ok) {
+            throw new Error("Otobüs hatları yüklenemedi.")
+          }
+          const data = await res.json()
+          if (data && data.otobus) {
+            // Gelen veride "D" içeren HatNo'ları temizle
+            const cleanedRoutes = data.otobus.map((route: BusRoute) => ({
+              ...route,
+              HatNo: route.HatNo.replace("D", ""),
+            }))
+            setAllBusRoutes(cleanedRoutes)
+            
+            // Veri yüklendikten sonra filtreleme yap
+            const filtered = cleanedRoutes
+              .filter((bus: BusRoute) => bus.HatNo.startsWith(value))
+              .slice(0, 10)
+            setFilteredBusRoutes(filtered)
+          }
+        } catch (error) {
+          console.error("Tüm otobüs hatları çekilirken hata:", error)
+          setBusScheduleError("Otobüs hatları yüklenirken bir hata oluştu.")
+        } finally {
+          setIsFilterLoading(false)
+        }
+      } else {
+        // Veriler zaten yüklüyse 300ms gecikme ile filtreleme yap
+        setIsFilterLoading(true)
+        try {
+          // 300ms fake gecikme ekle (tutarlı UX için)
+          await new Promise(resolve => setTimeout(resolve, 300))
+          
+          const filtered = allBusRoutes
+            .filter((bus: BusRoute) => bus.HatNo.startsWith(value))
+            .slice(0, 10)
+          setFilteredBusRoutes(filtered)
+        } finally {
+          setIsFilterLoading(false)
+        }
+      }
+      setShowScrollIndicator(true)
     }
   }
 
@@ -411,7 +485,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Otobüs Saatlerini Sorgula</DialogTitle>
             <DialogDescription>
-              Otobüs hat numarasını girerek ({busScheduleDialogBusNumber ? `${busScheduleDialogBusNumber} için gösteriliyor` : "örn: 190"}) saatlerini görüntüleyebilirsiniz.
+              Otobüs hat numarasını girerek otobüs saatlerini görüntüleyebilirsiniz.
             </DialogDescription>
           </DialogHeader>
 
@@ -421,7 +495,10 @@ export default function Home() {
               <div className="flex w-full max-w-sm items-center space-x-2">
                 <Input
                   type="text"
-                  placeholder="Otobüs hat numarası girin"
+                  inputMode="numeric"
+                  pattern="[1-9][0-9]*"
+                  maxLength={3}
+                  placeholder="Hat no (örn: 190)"
                   value={busScheduleInputValue}
                   onChange={handleBusInputChange}
                   onKeyDown={handleBusScheduleKeyDownInDialog}
@@ -435,32 +512,50 @@ export default function Home() {
                   onClick={() => handleBusScheduleSearchInDialog()}
                   disabled={busScheduleLoading || !busScheduleInputValue}
                 >
-                  Sorgula
+                  {busScheduleLoading ? "Yükleniyor..." : "Sorgula"}
                 </Button>
               </div>
-              {filteredBusRoutes.length > 0 && (
+              {/* Canlı öneriler */}
+              {(filteredBusRoutes.length > 0 || isFilterLoading) && (
                 <div className="absolute z-50 w-full bg-card border border-border rounded-md shadow-lg bottom-full mb-1 max-h-60 overflow-hidden">
                   <div 
                     className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
                     onScroll={handleScroll}
                   >
-                    <ul>
-                      {filteredBusRoutes.map((bus) => (
-                        <li
-                          key={bus.HatNo}
-                          className="px-3 py-2 cursor-pointer hover:bg-muted flex items-center gap-2"
-                          onClick={() => handleSuggestionClick(bus.HatNo)}
-                        >
-                          <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded font-bold flex-shrink-0">{bus.HatNo}</span>
-                          <span className="text-sm text-muted-foreground font-normal truncate min-w-0">
-                            {bus.GuzergahIsmi || bus.HatAdi || 'Bilgi yok'}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    {isFilterLoading ? (
+                      <div className="space-y-0">
+                        {/* Skeleton Items - Gerçek liste elemanlarını taklit ediyor */}
+                        {Array.from({ length: 6 }).map((_, index) => (
+                          <div key={index} className="px-3 py-2 flex items-center gap-2 animate-pulse">
+                            {/* Hat numarası tag skeleton */}
+                            <div className="h-6 w-8 bg-muted rounded flex-shrink-0"></div>
+                            {/* Hat açıklaması skeleton - farklı genişliklerde */}
+                            <div className={`h-4 bg-muted rounded flex-shrink-0 ${
+                              index % 3 === 0 ? 'w-32' : 
+                              index % 3 === 1 ? 'w-40' : 'w-36'
+                            }`}></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <ul>
+                        {filteredBusRoutes.map((bus: BusRoute) => (
+                          <li
+                            key={bus.HatNo}
+                            className="px-3 py-2 cursor-pointer hover:bg-muted flex items-center gap-2"
+                            onClick={() => handleSuggestionClick(bus.HatNo)}
+                          >
+                            <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded font-bold flex-shrink-0">{bus.HatNo}</span>
+                            <span className="text-sm text-muted-foreground font-normal truncate min-w-0">
+                              {bus.GuzergahIsmi || bus.HatAdi || 'Bilgi yok'}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                   {/* Scroll indicator and fade effect */}
-                  {filteredBusRoutes.length > 5 && showScrollIndicator && (
+                  {!isFilterLoading && filteredBusRoutes.length > 5 && showScrollIndicator && (
                     <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent pointer-events-none flex items-end justify-center pb-1">
                       <div className="text-xs text-muted-foreground flex items-center gap-1">
                         <span>↓</span>
