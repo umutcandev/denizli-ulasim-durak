@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 
 interface WeatherData {
   temp_c: { '@data': string }
-  icon: { '@data': string }
-  condition: { '@data': string }
 }
 
 interface WeatherResponse {
@@ -34,17 +32,9 @@ export async function GET() {
     }
 
     const currentConditions = data.xml_api_reply.weather.current_conditions
-    
-    // Icon URL'ini tam URL'ye çevir
-    const iconPath = currentConditions.icon['@data']
-    const fullIconUrl = iconPath.startsWith('http') 
-      ? iconPath 
-      : `https://denizli.bel.tr/${iconPath}`
 
     return NextResponse.json({
-      temperature: currentConditions.temp_c['@data'],
-      icon: fullIconUrl,
-      condition: currentConditions.condition['@data']
+      temperature: currentConditions.temp_c['@data']
     })
 
   } catch (error) {

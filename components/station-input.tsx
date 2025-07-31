@@ -5,15 +5,19 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Github, Loader2, Clock } from "lucide-react"
+import { Loader2, Clock } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface StationInputProps {
   onSubmit: (stationId: string) => void
   isLoading: boolean
   onShowBusTimesClick?: () => void
+  weatherData?: {
+    temperature: string;
+  } | null
 }
 
-export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick }: StationInputProps) {
+export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick, weatherData }: StationInputProps) {
   const [inputValue, setInputValue] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,20 +27,43 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick 
     }
   }
 
+  const getTemperatureStyle = (temperature: string) => {
+    // Sıcaklık değerini sayıya çevir (°C işaretini kaldır)
+    const temp = parseFloat(temperature.replace(/[^\d.-]/g, ''))
+    
+    if (temp < 0) {
+      // Çok soğuk - Mavi
+      return "bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200"
+    } else if (temp <= 10) {
+      // Soğuk - Açık mavi
+      return "bg-sky-100 border-sky-300 text-sky-800 dark:bg-sky-900 dark:border-sky-700 dark:text-sky-200"
+    } else if (temp <= 20) {
+      // Serin - Yeşil
+      return "bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200"
+    } else if (temp <= 30) {
+      // Ilık - Sarı
+      return "bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-200"
+    } else if (temp <= 40) {
+      // Sıcak - Turuncu
+      return "bg-orange-100 border-orange-300 text-orange-800 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-200"
+    } else {
+      // Çok sıcak - Kırmızı
+      return "bg-red-100 border-red-300 text-red-800 dark:bg-red-900 dark:border-red-700 dark:text-red-200"
+    }
+  }
+
   return (
     <Card className="border-zinc-200 dark:border-zinc-800">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-xl">Durak ve Otobüs Saatleri Bilgisi</CardTitle>
-          <a
-            href="https://github.com/umutcandev/denizli-ulasim-durak"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-800 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-          >
-            <Github className="mr-1 h-3.5 w-3.5" />
-            /umutcandev
-          </a>
+          {weatherData ? (
+            <div className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium whitespace-nowrap ${getTemperatureStyle(weatherData.temperature)}`}>
+              <strong>Hava:</strong>&nbsp;{weatherData.temperature}
+            </div>
+          ) : (
+            <Skeleton className="h-6 w-24 rounded-md" />
+          )}
         </div>
         <CardDescription>Durak numarasını girerek o durağa ait otobüs bilgilerini görebilir, yandaki saat simgesine tıklayarak otobüs saatlerini inceleyebilirsiniz.</CardDescription>
       </CardHeader>

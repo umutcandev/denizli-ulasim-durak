@@ -42,8 +42,6 @@ export default function Home() {
   const [recentStations, setRecentStations] = useState<Array<{ id: string; name: string }>>([])
   const [weatherData, setWeatherData] = useState<{
     temperature: string;
-    icon: string;
-    condition: string;
   } | null>(null)
   const [recentBusLines, setRecentBusLines] = useState<string[]>([])
   const scheduleRef = useRef<HTMLDivElement>(null)
@@ -431,19 +429,6 @@ export default function Home() {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end mt-3 sm:mt-0 gap-2 sm:gap-4">
-              {weatherData && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Image 
-                    src={weatherData.icon} 
-                    alt={weatherData.condition}
-                    width={24}
-                    height={24}
-                    className="object-contain"
-                    unoptimized
-                  />
-                  <span>{weatherData.temperature}</span>
-                </div>
-              )}
               <div>
                 <ThemeToggle />
               </div>
@@ -455,7 +440,8 @@ export default function Home() {
           <StationInput 
             onSubmit={handleStationSubmit} 
             isLoading={loading} 
-            onShowBusTimesClick={openBusScheduleDialog} 
+            onShowBusTimesClick={openBusScheduleDialog}
+            weatherData={weatherData}
           />
 
           {recentStations.length > 0 && (
