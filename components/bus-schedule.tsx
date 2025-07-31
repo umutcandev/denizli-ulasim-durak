@@ -64,10 +64,8 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
     // Sonra ana veriyi yenile
     onRefresh()
     
-    // Kısa bir süre sonra yenileme durumunu kapat
-    setTimeout(() => {
-      setIsRefreshing(false)
-    }, 1000)
+    // Yenileme durumunu kapat
+    setIsRefreshing(false)
   }, [fetchScheduleUrls, onRefresh])
 
   // Otobüs saatleri diyaloğunu aç

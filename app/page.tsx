@@ -40,7 +40,11 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [recentStations, setRecentStations] = useState<Array<{ id: string; name: string }>>([])
-  const [currentTime, setCurrentTime] = useState<string>("")
+  const [weatherData, setWeatherData] = useState<{
+    temperature: string;
+    icon: string;
+    condition: string;
+  } | null>(null)
   const [recentBusLines, setRecentBusLines] = useState<string[]>([])
   const scheduleRef = useRef<HTMLDivElement>(null)
 
@@ -59,21 +63,24 @@ export default function Home() {
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
   const [isFilterLoading, setIsFilterLoading] = useState(false)
 
-  // Tarayıcı tarafında çalıştığında zamanı ayarla
+  // Hava durumu verilerini çek
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date()
-      setCurrentTime(now.toLocaleTimeString("tr-TR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      }))
+    const fetchWeatherData = async () => {
+      try {
+        const response = await fetch('/api/weather')
+        if (response.ok) {
+          const data = await response.json()
+          setWeatherData(data)
+        }
+      } catch (error) {
+        console.error('Hava durumu verisi alınamadı:', error)
+      }
     }
     
-    updateTime()
+    fetchWeatherData()
     
-    // Her saniye zamanı güncelle
-    const intervalId = setInterval(updateTime, 1000)
+    // Her 5 dakikada bir hava durumunu güncelle
+    const intervalId = setInterval(fetchWeatherData, 5 * 60 * 1000)
     
     return () => clearInterval(intervalId)
   }, [])
@@ -210,9 +217,6 @@ export default function Home() {
       setFilteredBusRoutes([])
       
       try {
-        // 300ms fake gecikme ekle
-        await new Promise(resolve => setTimeout(resolve, 300))
-        
         const res = await fetch(BUS_SCHEDULE_JSON_URL)
         if (!res.ok) {
           throw new Error("Otobüs hatları yüklenemedi.")
@@ -294,9 +298,6 @@ export default function Home() {
     setFilteredBusRoutes([])
 
     try {
-      // 300ms fake gecikme ekle (buton loading göstermek için)
-      await new Promise(resolve => setTimeout(resolve, 300))
-      
       if (allBusRoutes.length === 0) {
         throw new Error("Otobüs hat listesi henüz yüklenmedi.")
       }
@@ -351,9 +352,6 @@ export default function Home() {
       if (allBusRoutes.length === 0) {
         setIsFilterLoading(true)
         try {
-          // 300ms fake gecikme ekle
-          await new Promise(resolve => setTimeout(resolve, 300))
-          
           const res = await fetch(BUS_SCHEDULE_JSON_URL)
           if (!res.ok) {
             throw new Error("Otobüs hatları yüklenemedi.")
@@ -380,12 +378,9 @@ export default function Home() {
           setIsFilterLoading(false)
         }
       } else {
-        // Veriler zaten yüklüyse 300ms gecikme ile filtreleme yap
+        // Veriler zaten yüklüyse filtreleme yap
         setIsFilterLoading(true)
         try {
-          // 300ms fake gecikme ekle (tutarlı UX için)
-          await new Promise(resolve => setTimeout(resolve, 300))
-          
           const filtered = allBusRoutes
             .filter((bus: BusRoute) => bus.HatNo.startsWith(value))
             .slice(0, 10)
@@ -435,9 +430,23 @@ export default function Home() {
                 <p className="text-xs text-gray-400">Denizli Ulaşım'ın durak saatleri için hazırlanmıştır.</p>
               </div>
             </div>
-            <div className="flex items-center justify-between mt-3 sm:mt-0 sm:justify-end sm:gap-4">
-              <div className="text-sm">{currentTime}</div>
-              <ThemeToggle />
+            <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end mt-3 sm:mt-0 gap-2 sm:gap-4">
+              {weatherData && (
+                <div className="flex items-center gap-2 text-sm">
+                  <Image 
+                    src={weatherData.icon} 
+                    alt={weatherData.condition}
+                    width={24}
+                    height={24}
+                    className="object-contain"
+                    unoptimized
+                  />
+                  <span>{weatherData.temperature}</span>
+                </div>
+              )}
+              <div>
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>
