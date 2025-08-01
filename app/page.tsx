@@ -408,16 +408,16 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="bg-zinc-900 dark:bg-black text-white p-4 sm:p-6 rounded-lg shadow-md mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+        <div className="relative bg-zinc-900 dark:bg-black text-white p-4 sm:p-6 rounded-lg shadow-md mb-6">
+          <div className="flex flex-row justify-between items-center">
             <div className="flex items-center">
               <div className="pl-2 mr-3 sm:mr-4">
-                <Image 
-                  src="/images/logo-twins.png" 
-                  alt="Logo" 
-                  width={50} 
-                  height={50} 
-                  className="object-contain" 
+                <Image
+                  src="/images/logo-twins.png"
+                  alt="Logo"
+                  width={50}
+                  height={50}
+                  className="object-contain"
                   loading="lazy"
                 />
               </div>
@@ -428,10 +428,8 @@ export default function Home() {
                 <p className="text-xs text-gray-400">Denizli Ulaşım'ın durak saatleri için hazırlanmıştır.</p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end mt-3 sm:mt-0 gap-2 sm:gap-4">
-              <div>
-                <ThemeToggle />
-              </div>
+            <div className="sm:relative sm:top-auto sm:right-auto">
+              <ThemeToggle />
             </div>
           </div>
         </div>

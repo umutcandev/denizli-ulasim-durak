@@ -4,18 +4,48 @@ import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Moon, Sun, Monitor } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
+
+const themes = ["system", "light", "dark"]
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const isMobile = useIsMobile()
 
-  // Hidrasyon uyumsuzluğunu önlemek için
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  const handleMobileThemeChange = () => {
+    const currentIndex = themes.indexOf(theme ?? "system")
+    const nextIndex = (currentIndex + 1) % themes.length
+    setTheme(themes[nextIndex])
+  }
+
   if (!mounted) {
-    return null
+    return (
+      <div className="flex items-center rounded-md border border-zinc-700 bg-zinc-900 p-1">
+        <div className="h-6 w-6 sm:h-7 sm:w-7 animate-pulse bg-zinc-800 rounded-sm" />
+      </div>
+    )
+  }
+
+  if (isMobile) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-9 w-9 bg-zinc-900 border border-zinc-800 hover:bg-zinc-800"
+        onClick={handleMobileThemeChange}
+        title="Temayı değiştir"
+      >
+        {theme === "light" && <Sun className="h-4 w-4" />}
+        {theme === "dark" && <Moon className="h-4 w-4" />}
+        {theme === "system" && <Monitor className="h-4 w-4" />}
+        <span className="sr-only">Temayı değiştir</span>
+      </Button>
+    )
   }
 
   return (
