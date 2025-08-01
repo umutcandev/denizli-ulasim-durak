@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RefreshProgress } from "@/components/refresh-progress"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, MoreHorizontal, Copy, Map, Route, Clock, ChevronDown, ChevronUp } from "lucide-react"
+import { ExternalLink, MoreHorizontal, Copy, Map, Route, Clock, ChevronDown, ChevronUp, Navigation, Plus, Minus } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ import React, { useEffect, useState, useCallback } from "react"
 import { fetchBusSchedules } from "@/lib/api"
 import { BusScheduleImageDialog } from "@/components/bus-schedule-image-dialog"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
+import LeafletMap from "@/components/leaflet-map"
 
 interface BusData {
   stationName: string
@@ -24,6 +25,8 @@ interface BusData {
     kalanduraksayisi: number
     kalkisaKadarkiDakika: number
     plaka: string
+    latitude?: string
+    longitude?: string
   }>
 }
 
@@ -38,6 +41,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
+  const [mapInstances, setMapInstances] = useState<Record<number, any>>({})
 
   // Otobüs saatlerini çek
   const fetchScheduleUrls = useCallback(async () => {
@@ -147,6 +151,36 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   const showStationMap = (stationId: string) => {
     window.open(`https://ulasim.denizli.bel.tr/?page=harita&durakId=${stationId}`, "_blank")
   }
+  
+  // Ondalık ayırıcıyı virgülden noktaya çeviren yardımcı fonksiyon
+  const formatCoordinate = (coordinate: string | undefined): string => {
+    if (!coordinate) return "-"
+    return coordinate.replace(",", ".")
+  }
+
+  // Map instance'ını kaydet
+  const handleMapReady = useCallback((index: number, map: any) => {
+    setMapInstances(prev => ({
+      ...prev,
+      [index]: map
+    }))
+  }, [])
+
+  // Zoom in fonksiyonu
+  const handleZoomIn = useCallback((index: number) => {
+    const map = mapInstances[index]
+    if (map) {
+      map.zoomIn()
+    }
+  }, [mapInstances])
+
+  // Zoom out fonksiyonu
+  const handleZoomOut = useCallback((index: number) => {
+    const map = mapInstances[index]
+    if (map) {
+      map.zoomOut()
+    }
+  }, [mapInstances])
 
   // Eğer yenileme yapılıyorsa, sadece tablo içeriğini skeleton olarak göster
   if (isRefreshing) {
@@ -269,36 +303,117 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                         <TableRow key={`detail-${index}`} className="border-t-0 border-b-0 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
                           <TableCell colSpan={4} className="p-0">
                             <div className={`row-details-container ${isExpanded ? 'row-details-enter-active' : 'row-details-enter'}`}>
-                              <div className="p-3 px-4 sm:px-6">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-                                  <div>
-                                    <div className="font-semibold text-zinc-500 dark:text-zinc-400">Kalan Durak</div>
-                                    <div>
-                                      {bus.kalanduraksayisi !== undefined ? (
-                                        <span className={`time-tag ${
-                                          bus.kalanduraksayisi <= 5 ? "time-tag-success" : 
-                                          bus.kalanduraksayisi <= 15 ? "time-tag-warning" : 
-                                          "time-tag-danger"
-                                        }`}>
-                                          {bus.kalanduraksayisi}
-                                        </span>
-                                      ) : "-"}
-                                    </div>
+                              <div className="grid grid-cols-2 grid-rows-[auto_1fr] gap-0 min-h-56">
+                                {/* İlk satır - Sol: Kalan Durak */}
+                                <div className="px-3 py-2 border-t border-r border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center flex-shrink-0">
+                                    <Navigation className="w-2.5 h-2.5 text-zinc-500 dark:text-zinc-400" />
                                   </div>
-                                  <div>
-                                    <div className="font-semibold text-zinc-500 dark:text-zinc-400 whitespace-nowrap">Kalkışa Kalan Süre</div>
-                                    <div className="whitespace-nowrap">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-md font-bold text-zinc-900 dark:text-zinc-100 leading-none">
+                                      {bus.kalanduraksayisi !== undefined ? bus.kalanduraksayisi : "-"}
+                                    </p>
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-tight">Kalan Durak</p>
+                                  </div>
+                                </div>
+
+                                {/* İlk satır - Sağ: Kalkışa Kalan */}
+                                <div className="px-3 py-2 border-t border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
+                                  <div className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center flex-shrink-0">
+                                    <Clock className="w-2.5 h-2.5 text-zinc-500 dark:text-zinc-400" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-md font-bold text-zinc-900 dark:text-zinc-100 leading-none">
                                       {bus.kalkisaKadarkiDakika <= 0 ? 
-                                        "Otobüs Hareket Halinde" : 
+                                        "Hareket" : 
                                         bus.kalkisaKadarkiDakika !== undefined ? 
-                                          `${bus.kalkisaKadarkiDakika} dk` : 
-                                          "Otobüs Hareket Halinde"
+                                          `${bus.kalkisaKadarkiDakika}dk` : 
+                                          "Hareket"
                                       }
-                                    </div>
+                                    </p>
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-tight">Kalkışa Kalan</p>
                                   </div>
-                                  <div>
-                                    <div className="font-semibold text-zinc-500 dark:text-zinc-400">Plaka</div>
-                                    <div>{bus.plaka && bus.plaka !== "EnYakinKalkis" && bus.plaka !== "ilkDurakKalkan" ? bus.plaka : "-"}</div>
+                                </div>
+
+                                {/* İkinci satır - Konum alanı (tam genişlik) */}
+                                <div className="col-span-2 row-start-2 p-2 flex flex-col">
+                                  {/* Harita - Mobil için daha büyük */}
+                                  <div className="flex-1 min-h-32 relative overflow-hidden rounded border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+                                    {/* Gerçek Leaflet haritası - Sadece expand edilmişse */}
+                                    {isExpanded && bus.latitude && bus.longitude ? (
+                                      <LeafletMap 
+                                        latitude={bus.latitude} 
+                                        longitude={bus.longitude}
+                                        className="rounded" 
+                                        onMapReady={(map) => handleMapReady(index, map)}
+                                      />
+                                    ) : isExpanded ? (
+                                      <div className="w-full h-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                                          Konum mevcut değil
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="w-full h-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                        <div className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                                          Haritayı görmek için expand edin
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Plaka bilgisi ve Zoom kontrolleri - Sadece harita varken */}
+                                    {isExpanded && bus.latitude && bus.longitude && (
+                                      <div className="absolute top-1 right-1 z-[1000] flex flex-col items-end gap-1">
+                                        <div className="bg-white/90 dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-0.5 shadow-sm">
+                                          <p className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
+                                            {bus.plaka && bus.plaka !== "EnYakinKalkis" && bus.plaka !== "ilkDurakKalkan" ? bus.plaka : "-"}
+                                          </p>
+                                        </div>
+
+                                        {/* Zoom kontrolleri */}
+                                        <div className="flex flex-col gap-0.5">
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline" 
+                                          className="h-6 w-6 p-0 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 shadow-sm"
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handleZoomIn(index)
+                                          }}
+                                        >
+                                          <Plus className="w-2 h-2 text-zinc-500 dark:text-zinc-400" />
+                                        </Button>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline" 
+                                          className="h-6 w-6 p-0 bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 shadow-sm"
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
+                                            handleZoomOut(index)
+                                          }}
+                                        >
+                                          <Minus className="w-2 h-2 text-zinc-500 dark:text-zinc-400" />
+                                        </Button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Koordinat bilgisi - Sadece harita varken */}
+                                    {isExpanded && bus.latitude && bus.longitude && (
+                                      <div className="absolute bottom-1 left-1 bg-white/90 dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-xs font-mono text-zinc-500 dark:text-zinc-400 z-[1000] shadow-sm">
+                                        {formatCoordinate(bus.latitude).substring(0, 6)}, {formatCoordinate(bus.longitude).substring(0, 6)}
+                                      </div>
+                                    )}
+
+                                    {/* Canlı indicator - Sadece harita varken */}
+                                    {isExpanded && bus.latitude && bus.longitude && bus.kalkisaKadarkiDakika <= 0 && (
+                                      <div className="absolute top-1 left-1 bg-white/90 dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-xs text-zinc-900 dark:text-zinc-100 flex items-center gap-1 z-[1000] shadow-sm">
+                                        <div className="w-1 h-1 bg-red-500 rounded-full" />
+                                        <span>Canlı</span>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
