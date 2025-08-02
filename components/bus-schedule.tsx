@@ -273,7 +273,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                 {/* Station ID - Üst satır */}
                 {stationInfo.stationId && (
                   <div className="flex items-center">
-                    <span className="bg-primary text-primary-foreground px-2 py-1 rounded-md font-bold text-lg">
+                    <span className="bg-primary text-primary-foreground px-1 py-0.3 rounded-md font-bold text-md">
                       {stationInfo.stationId}
                     </span>
                   </div>
@@ -334,7 +334,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
           <Tabs defaultValue="schedule" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="schedule">Dakika Bilgileri</TabsTrigger>
-              <TabsTrigger value="lines">Durak Hatları</TabsTrigger>
+              <TabsTrigger value="lines">Duraktan Geçen Hatlar</TabsTrigger>
             </TabsList>
             
             <TabsContent value="schedule" className="mt-4">

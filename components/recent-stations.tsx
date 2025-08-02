@@ -20,7 +20,7 @@ export default function RecentStations({ stations, onStationClick }: RecentStati
           Son bakılan duraklar burada listelenir. Tarayıcı hafızasında saklanır ve kaybolmaz.
         </CardDescription>
       </CardHeader>
-      <CardContent className="pb-4">
+      <CardContent className="pb-6">
         <div className="flex flex-wrap gap-1.5">
           {stations.map((station) => {
             // Durak adı çok uzunsa kısalt (mobil için)

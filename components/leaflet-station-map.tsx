@@ -17,8 +17,8 @@ interface LeafletStationMapProps {
 const DynamicLeafletStationMap = dynamic(() => import("@/components/leaflet-station-map-client"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-900/20 dark:to-green-900/20 flex items-center justify-center">
-      <div className="text-xs text-zinc-500 dark:text-zinc-400">Harita yükleniyor...</div>
+    <div className="w-full h-full bg-muted/50 dark:bg-muted/30 flex items-center justify-center">
+      <div className="text-xs text-muted-foreground">Harita yükleniyor...</div>
     </div>
   )
 }) as React.ComponentType<{ latitude: string; longitude: string; onMapReady?: (map: any) => void }>

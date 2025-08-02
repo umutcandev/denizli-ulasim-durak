@@ -20,7 +20,7 @@ export function BusScheduleSkeleton({ stationName, stationId }: BusScheduleSkele
                 <>
                   {/* Station ID - Üst satır */}
                   <div className="flex items-center">
-                    <span className="bg-primary text-primary-foreground px-2 py-1 rounded-md font-bold text-lg">
+                    <span className="bg-primary text-primary-foreground px-1 py-0.3 rounded-md font-bold text-md">
                       {stationId}
                     </span>
                   </div>
