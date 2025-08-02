@@ -334,7 +334,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
           <Tabs defaultValue="schedule" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="schedule">Dakika Bilgileri</TabsTrigger>
-              <TabsTrigger value="lines">Duraktan Geçen Hatlar</TabsTrigger>
+              <TabsTrigger value="lines">Duraktan Geçenler</TabsTrigger>
             </TabsList>
             
             <TabsContent value="schedule" className="mt-4">
@@ -409,7 +409,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                           </TableCell>
                           <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4" onClick={(e) => e.stopPropagation()}>
                             {busNumber !== "-" && (
-                              <DropdownMenu>
+                              <DropdownMenu modal={false}>
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="outline"
@@ -419,14 +419,15 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent 
+                                  align="end" 
+                                  className="z-[2000]"
+                                  sideOffset={4}
+                                  avoidCollisions={true}
+                                >
                                   <DropdownMenuItem onClick={() => navigateToBusRoute(busNumber)}>
                                     <ExternalLink className="mr-2 h-4 w-4" />
                                     <span>Otobüs detayları</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => window.open(`https://ulasim.denizli.bel.tr/map.html?hatNo=${busNumber}`, "_blank")}>
-                                    <Map className="mr-2 h-4 w-4" />
-                                    <span>Haritada göster</span>
                                   </DropdownMenuItem>
                                   {scheduleUrls[busNumber] && (
                                     <DropdownMenuItem onClick={() => openScheduleDialog(busNumber, scheduleUrls[busNumber])}>
@@ -613,8 +614,13 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {busLinesData.busList.map((line, index) => {
-                        const busNumber = line.hatno?.replace("D", "") || "-"
+                      {/* Duplicate verileri filtrele - aynı hat numarası birden fazla olabilir */}
+                      {busLinesData.busList
+                        .filter((line, index, self) => 
+                          index === self.findIndex((l) => l.hatno === line.hatno)
+                        )
+                        .map((line, index) => {
+                          const busNumber = line.hatno?.replace("D", "") || "-"
                         
                         return (
                           <TableRow
@@ -627,7 +633,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                             <TableCell className="p-2 px-1 sm:p-4 truncate overflow-hidden" title={line.hatadi || "-"}>{line.hatadi || "-"}</TableCell>
                             <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4 w-[80px]">
                               {busNumber !== "-" && (
-                                <DropdownMenu>
+                                <DropdownMenu modal={false}>
                                   <DropdownMenuTrigger asChild>
                                     <Button
                                       variant="outline"
@@ -637,7 +643,12 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                                       <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
+                                  <DropdownMenuContent 
+                                    align="end" 
+                                    className="z-[2000]"
+                                    sideOffset={4}
+                                    avoidCollisions={true}
+                                  >
                                     <DropdownMenuItem onClick={() => navigateToBusRoute(busNumber)}>
                                       <ExternalLink className="mr-2 h-4 w-4" />
                                       <span>Hat detayları</span>

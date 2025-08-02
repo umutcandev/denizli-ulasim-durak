@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   const stationId = searchParams.get("stationId") || ""
 
   try {
+    // Duraktan geçen hatları getirmek için parametresiz endpoint kullan
     const response = await fetch(
       `https://ulasim.denizli.bel.tr/UlasimBackend/api/Calc/GetBusDataForStation?waitingStation=${stationId}`,
       {
