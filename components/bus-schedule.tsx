@@ -1,5 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
 import { RefreshProgress } from "@/components/refresh-progress"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, MoreHorizontal, Copy, Map, Route, Clock, ChevronDown, ChevronUp, Navigation, Plus, Minus } from "lucide-react"
@@ -14,10 +16,13 @@ import { fetchBusSchedules } from "@/lib/api"
 import { BusScheduleImageDialog } from "@/components/bus-schedule-image-dialog"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import LeafletMap from "@/components/leaflet-map"
+import LeafletStationMap from "@/components/leaflet-station-map"
 
 interface BusData {
   stationName: string
   stationId: string
+  longitude?: string
+  latitude?: string
   busList: Array<{
     hatno: string
     hatadi: string
@@ -27,6 +32,17 @@ interface BusData {
     plaka: string
     latitude?: string
     longitude?: string
+  }>
+}
+
+interface BusLineData {
+  stationName: string
+  stationId: string
+  longitude?: string
+  latitude?: string
+  busList: Array<{
+    hatno: string
+    hatadi: string
   }>
 }
 
@@ -42,6 +58,11 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({})
   const [mapInstances, setMapInstances] = useState<Record<number, any>>({})
+  
+  // Bus lines için state'ler
+  const [busLinesData, setBusLinesData] = useState<BusLineData | null>(null)
+  const [busLinesLoading, setBusLinesLoading] = useState(false)
+  const [busLinesError, setBusLinesError] = useState<string | null>(null)
 
   // Otobüs saatlerini çek
   const fetchScheduleUrls = useCallback(async () => {
@@ -53,10 +74,51 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
     }
   }, [])
 
+  // Bus lines verilerini çek
+  const fetchBusLines = useCallback(async (stationId: string) => {
+    if (!stationId) return
+    
+    setBusLinesLoading(true)
+    setBusLinesError(null)
+    
+    try {
+      const response = await fetch(`/api/bus-lines?stationId=${stationId}`)
+      if (!response.ok) {
+        throw new Error(`API yanıt hatası: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      
+      if (result.isSuccess && result.value) {
+        setBusLinesData({
+          stationName: result.value.stationName,
+          stationId: result.value.stationId,
+          longitude: result.value.longitude,
+          latitude: result.value.latitude,
+          busList: result.value.busList
+        })
+      } else {
+        throw new Error("Veri çekilemedi")
+      }
+    } catch (error) {
+      console.error("Bus lines çekilirken hata:", error)
+      setBusLinesError("Durak hatları yüklenirken bir hata oluştu")
+    } finally {
+      setBusLinesLoading(false)
+    }
+  }, [])
+
   // İlk yüklemede ve her yenilemede çalıştır
   useEffect(() => {
     fetchScheduleUrls()
   }, [fetchScheduleUrls])
+
+  // Data değiştiğinde bus lines'ı çek
+  useEffect(() => {
+    if (data?.stationId) {
+      fetchBusLines(data.stationId)
+    }
+  }, [data?.stationId, fetchBusLines])
 
   // Yenileme işlemini özelleştir
   const handleRefresh = useCallback(() => {
@@ -65,12 +127,17 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
     // Önce otobüs saatlerini yenile
     fetchScheduleUrls()
     
+    // Bus lines'ı yenile
+    if (data?.stationId) {
+      fetchBusLines(data.stationId)
+    }
+    
     // Sonra ana veriyi yenile
     onRefresh()
     
     // Yenileme durumunu kapat
     setIsRefreshing(false)
-  }, [fetchScheduleUrls, onRefresh])
+  }, [fetchScheduleUrls, fetchBusLines, data?.stationId, onRefresh])
 
   // Otobüs saatleri diyaloğunu aç
   const openScheduleDialog = (busNumber: string, url: string) => {
@@ -187,22 +254,94 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
     return <BusScheduleSkeleton stationName={stationName} stationId={stationId} />
   }
 
+  // Evrensel durak bilgileri (bus lines data varsa onu kullan, yoksa mevcut data'yı kullan)
+  const stationInfo = busLinesData || {
+    stationName: data?.stationName,
+    stationId: data?.stationId,
+    longitude: data?.longitude,
+    latitude: data?.latitude
+  }
+
   return (
     <>
       <Card className="border-zinc-200 dark:border-zinc-800">
         <CardHeader className="pb-3">
-          <CardTitle className="text-xl text-center">
-            {stationName} {stationId && `(${stationId})`} DURAĞI
-          </CardTitle>
-          <div className="mt-4">
-            <RefreshProgress interval={30000} onRefresh={handleRefresh} />
+          <div className="flex items-stretch gap-3">
+            {/* Sol taraf - Station bilgileri */}
+            <div className="flex-1 min-w-0">
+              <div className="space-y-1">
+                {/* Station ID - Üst satır */}
+                {stationInfo.stationId && (
+                  <div className="flex items-center">
+                    <span className="bg-primary text-primary-foreground px-2 py-1 rounded-md font-bold text-lg">
+                      {stationInfo.stationId}
+                    </span>
+                  </div>
+                )}
+                {/* Station Name - Alt satır */}
+                <CardTitle className="text-lg font-semibold">
+                  {stationInfo.stationName}
+                </CardTitle>
+              </div>
+            </div>
+            
+            {/* Sağ taraf - Dinamik harita */}
+            {stationInfo.longitude && stationInfo.latitude && (
+              <div className="relative w-32 sm:w-40 md:w-48 rounded overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex-shrink-0">
+                <LeafletStationMap 
+                  latitude={stationInfo.latitude} 
+                  longitude={stationInfo.longitude}
+                  className="rounded"
+                  onMapReady={(map) => handleMapReady(-1, map)}
+                />
+                
+                {/* Zoom kontrolleri */}
+                <div className="absolute top-1 right-1 z-[1000] flex flex-col gap-0.5">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-5 w-5 p-0 bg-white/90 dark:bg-zinc-800/90 border-zinc-200 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-700 shadow-sm"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleZoomIn(-1)
+                    }}
+                  >
+                    <Plus className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-5 w-5 p-0 bg-white/90 dark:bg-zinc-800/90 border-zinc-200 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-700 shadow-sm"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleZoomOut(-1)
+                    }}
+                  >
+                    <Minus className="w-3 h-3 text-zinc-600 dark:text-zinc-400" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6">
-          {busList.length === 0 ? (
-            <div className="text-center p-4 text-muted-foreground">Bu duraktan şu an için geçecek otobüs yoktur.</div>
-          ) : (
-            <div className="rounded-md border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
+        <CardContent className="pt-0">
+          <div className="mb-4">
+            <RefreshProgress interval={30000} onRefresh={handleRefresh} />
+          </div>
+          
+          <Tabs defaultValue="schedule" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="schedule">Dakika Bilgileri</TabsTrigger>
+              <TabsTrigger value="lines">Durak Hatları</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="schedule" className="mt-4">
+              {busList.length === 0 ? (
+                <div className="text-center p-4 text-muted-foreground">Bu duraktan şu an için geçecek otobüs yoktur.</div>
+              ) : (
+                <div className="rounded-md border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-zinc-200 dark:border-zinc-800">
@@ -425,8 +564,111 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                   })}
                 </TableBody>
               </Table>
-            </div>
-          )}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="lines" className="mt-4">
+              {busLinesLoading ? (
+                <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
+                  <Table className="table-fixed w-full">
+                    <TableHeader>
+                      <TableRow className="border-zinc-200 dark:border-zinc-800">
+                        <TableHead className="w-[80px] p-2 pl-3 pr-1 sm:p-4">Hat</TableHead>
+                        <TableHead className="p-2 px-1 sm:p-4 max-w-0">Hat Adı</TableHead>
+                        <TableHead className="text-right w-[80px] p-2 pl-1 pr-3 sm:p-4">İşlem</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Array.from({ length: 6 }).map((_, index) => (
+                        <TableRow key={index} className="border-zinc-200 dark:border-zinc-800">
+                          <TableCell className="font-medium p-2 pl-3 pr-1 sm:p-4 w-[80px]">
+                            <Skeleton className="h-4 w-12" />
+                          </TableCell>
+                          <TableCell className="p-2 px-1 sm:p-4 truncate overflow-hidden">
+                            <Skeleton className="h-4 w-full max-w-xs" />
+                          </TableCell>
+                          <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4 w-[80px]">
+                            <Skeleton className="h-7 w-7 ml-auto" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : busLinesError ? (
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800/30 p-4 text-center">
+                  {busLinesError}
+                </div>
+              ) : !busLinesData || busLinesData.busList.length === 0 ? (
+                <div className="text-center p-4 text-muted-foreground">Bu duraktan geçen hat bulunamadı.</div>
+              ) : (
+                <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
+                  <Table className="table-fixed w-full">
+                    <TableHeader>
+                      <TableRow className="border-zinc-200 dark:border-zinc-800">
+                        <TableHead className="w-[80px] p-2 pl-3 pr-1 sm:p-4">Hat</TableHead>
+                        <TableHead className="p-2 px-1 sm:p-4 max-w-0">Hat Adı</TableHead>
+                        <TableHead className="text-right w-[80px] p-2 pl-1 pr-3 sm:p-4">İşlem</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {busLinesData.busList.map((line, index) => {
+                        const busNumber = line.hatno?.replace("D", "") || "-"
+                        
+                        return (
+                          <TableRow
+                            key={`line-${index}`}
+                            className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                          >
+                            <TableCell className="font-medium p-2 pl-3 pr-1 sm:p-4 w-[80px]">
+                              {busNumber}
+                            </TableCell>
+                            <TableCell className="p-2 px-1 sm:p-4 truncate overflow-hidden" title={line.hatadi || "-"}>{line.hatadi || "-"}</TableCell>
+                            <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4 w-[80px]">
+                              {busNumber !== "-" && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 sm:h-9 px-2 sm:px-3 min-w-0"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => navigateToBusRoute(busNumber)}>
+                                      <ExternalLink className="mr-2 h-4 w-4" />
+                                      <span>Hat detayları</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => window.open(`https://ulasim.denizli.bel.tr/map.html?hatNo=${busNumber}`, "_blank")}>
+                                      <Map className="mr-2 h-4 w-4" />
+                                      <span>Haritada göster</span>
+                                    </DropdownMenuItem>
+                                    {scheduleUrls[busNumber] && (
+                                      <DropdownMenuItem onClick={() => openScheduleDialog(busNumber, scheduleUrls[busNumber])}>
+                                        <Clock className="mr-2 h-4 w-4" />
+                                        <span>Otobüs saatleri</span>
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem onClick={() => copyBusNumber(busNumber)}>
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      <span>Hat no kopyala</span>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
