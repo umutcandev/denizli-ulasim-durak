@@ -9,6 +9,8 @@ import "leaflet/dist/leaflet.css"
 interface LeafletMapProps {
   latitude: string
   longitude: string
+  stationLatitude?: string
+  stationLongitude?: string
   className?: string
   onMapReady?: (map: any) => void
 }
@@ -21,12 +23,18 @@ const DynamicLeafletMap = dynamic(() => import("@/components/leaflet-map-client"
       <div className="text-xs text-muted-foreground">Harita yükleniyor...</div>
     </div>
   )
-}) as React.ComponentType<{ latitude: string; longitude: string; onMapReady?: (map: any) => void }>
+}) as React.ComponentType<{ latitude: string; longitude: string; stationLatitude?: string; stationLongitude?: string; onMapReady?: (map: any) => void }>
 
-export default function LeafletMap({ latitude, longitude, className, onMapReady }: LeafletMapProps) {
+export default function LeafletMap({ latitude, longitude, stationLatitude, stationLongitude, className, onMapReady }: LeafletMapProps) {
   return (
     <div className={`w-full h-full ${className || ""}`}>
-      <DynamicLeafletMap latitude={latitude} longitude={longitude} onMapReady={onMapReady} />
+      <DynamicLeafletMap 
+        latitude={latitude} 
+        longitude={longitude} 
+        stationLatitude={stationLatitude}
+        stationLongitude={stationLongitude}
+        onMapReady={onMapReady} 
+      />
     </div>
   )
 }

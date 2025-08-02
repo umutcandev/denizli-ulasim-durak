@@ -221,10 +221,10 @@ export default function Home() {
         }
         const data = await res.json()
         if (data && data.otobus) {
-          // Gelen veride "D" içeren HatNo'ları temizle
+          // Gelen veride sondaki "D" harfini temizle (T1, T2 gibi anlamlı prefixleri koru)
           const cleanedRoutes = data.otobus.map((route: BusRoute) => ({
             ...route,
-            HatNo: route.HatNo.replace("D", ""),
+            HatNo: route.HatNo.replace(/D$/, ""),
           }))
           setAllBusRoutes(cleanedRoutes)
           
@@ -260,7 +260,8 @@ export default function Home() {
     setIsImageLightboxOpen(false) // Lightbox'ı da kapat
     setIsFilterLoading(false) // Loading state'ini sıfırla
     
-    // Artık dialog açıldığında API çağrısı yapmıyoruz
+    // Dialog açıldığında arka planda tüm otobüs hatlarını yükle
+    preloadBusRoutesData()
   }
 
   // Tüm otobüs hatlarını çekme fonksiyonu
@@ -282,6 +283,46 @@ export default function Home() {
     } catch (error) {
       console.error("Tüm otobüs hatları çekilirken hata:", error)
       setBusScheduleError("Otobüs hatları yüklenirken bir hata oluştu.")
+    }
+  }
+
+  // Dialog açıldığında arka planda veri yükleme fonksiyonu
+  const preloadBusRoutesData = async () => {
+    try {
+      const res = await fetch(BUS_SCHEDULE_JSON_URL)
+      if (!res.ok) {
+        throw new Error("Otobüs hatları yüklenemedi.")
+      }
+      const data = await res.json()
+      if (data && data.otobus) {
+        // Gelen veride sondaki "D" harfini temizle (T1, T2 gibi anlamlı prefixleri koru)
+        const cleanedRoutes = data.otobus.map((route: BusRoute) => ({
+          ...route,
+          HatNo: route.HatNo.replace(/D$/, ""),
+        }))
+        setAllBusRoutes(cleanedRoutes)
+        console.log("Otobüs hatları arka planda yüklendi:", cleanedRoutes.length, "hat")
+      }
+    } catch (error) {
+      console.error("Arka plan veri yükleme hatası:", error)
+      // Arka plan yükleme hatalarını sessizce yönet, kullanıcıyı rahatsız etme
+    }
+  }
+
+  // Dialog açılma/kapanma event handler'ı
+  const handleBusScheduleDialogChange = (open: boolean) => {
+    setIsBusScheduleDialogOpen(open)
+    
+    if (!open) {
+      // Dialog kapandığında verileri temizle - bir sonraki açılışta fresh data için
+      setAllBusRoutes([])
+      setBusScheduleError("")
+      setBusScheduleImageUrl("")
+      setBusScheduleInputValue("")
+      setFilteredBusRoutes([])
+      setIsImageLightboxOpen(false)
+      setIsFilterLoading(false)
+      console.log("Dialog kapandı, veriler temizlendi")
     }
   }
 
@@ -325,15 +366,15 @@ export default function Home() {
 
   // Canlı arama için input değişimini yöneten fonksiyon
   const handleBusInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    const value = e.target.value.toUpperCase()
     
-    // Sadece sayısal karakterlere (0-9), maksimum 3 haneli ve 0 ile başlayamaz
-    if (value.length > 3) {
+    // Maksimum 4 karakter (T123 gibi)
+    if (value.length > 4) {
       return
     }
     
-    // Boş string veya 1-9 ile başlayan sayılara izin ver (0 ile başlayamaz)
-    if (value !== "" && !/^[1-9][0-9]*$/.test(value)) {
+    // Alphanumeric karakterlere izin ver (harfler ve sayılar)
+    if (value !== "" && !/^[A-Z0-9]+$/.test(value)) {
       return
     }
     
@@ -359,7 +400,7 @@ export default function Home() {
             // Gelen veride "D" içeren HatNo'ları temizle
             const cleanedRoutes = data.otobus.map((route: BusRoute) => ({
               ...route,
-              HatNo: route.HatNo.replace("D", ""),
+              HatNo: route.HatNo.replace(/D$/, ""),
             }))
             setAllBusRoutes(cleanedRoutes)
             
@@ -376,16 +417,11 @@ export default function Home() {
           setIsFilterLoading(false)
         }
       } else {
-        // Veriler zaten yüklüyse filtreleme yap
-        setIsFilterLoading(true)
-        try {
-          const filtered = allBusRoutes
-            .filter((bus: BusRoute) => bus.HatNo.startsWith(value))
-            .slice(0, 10)
-          setFilteredBusRoutes(filtered)
-        } finally {
-          setIsFilterLoading(false)
-        }
+        // Veriler zaten yüklüyse anında filtreleme yap (loading state gerekmez)
+        const filtered = allBusRoutes
+          .filter((bus: BusRoute) => bus.HatNo.startsWith(value))
+          .slice(0, 10)
+        setFilteredBusRoutes(filtered)
       }
       setShowScrollIndicator(true)
     }
@@ -473,7 +509,7 @@ export default function Home() {
       </div>
 
       {/* Yeni Otobüs Saatleri Dialog */}
-      <Dialog open={isBusScheduleDialogOpen} onOpenChange={setIsBusScheduleDialogOpen}>
+      <Dialog open={isBusScheduleDialogOpen} onOpenChange={handleBusScheduleDialogChange}>
         <DialogContent className="sm:max-w-md flex flex-col max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Otobüs Saatlerini Sorgula</DialogTitle>
@@ -488,10 +524,10 @@ export default function Home() {
               <div className="flex w-full max-w-sm items-center space-x-2">
                 <Input
                   type="text"
-                  inputMode="numeric"
-                  pattern="[1-9][0-9]*"
-                  maxLength={3}
-                  placeholder="Hat no (örn: 190)"
+                  inputMode="text"
+                  pattern="[A-Za-z0-9]*"
+                  maxLength={4}
+                  placeholder="Hat no (örn: 190, T1, T2)"
                   value={busScheduleInputValue}
                   onChange={handleBusInputChange}
                   onKeyDown={handleBusScheduleKeyDownInDialog}

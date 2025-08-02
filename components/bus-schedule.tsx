@@ -379,7 +379,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                     }
 
                     const timeTagClass = getTimeTagClass(minutes)
-                    const busNumber = bus.hatno?.replace("D", "") || "-"
+                    const busNumber = bus.hatno?.replace(/D$/, "") || "-"
                     const isExpanded = expandedRows[index] || false
 
                     return (
@@ -484,6 +484,8 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                                       <LeafletMap 
                                         latitude={bus.latitude} 
                                         longitude={bus.longitude}
+                                        stationLatitude={stationInfo.latitude}
+                                        stationLongitude={stationInfo.longitude}
                                         className="rounded" 
                                         onMapReady={(map) => handleMapReady(index, map)}
                                       />
@@ -504,10 +506,37 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                                     {/* Plaka bilgisi ve Zoom kontrolleri - Sadece harita varken */}
                                     {isExpanded && bus.latitude && bus.longitude && (
                                       <div className="absolute top-1 right-1 z-[1000] flex flex-col items-end gap-1">
-                                        <div className="bg-white/90 dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-0.5 shadow-sm">
-                                          <p className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                                            {bus.plaka && bus.plaka !== "EnYakinKalkis" && bus.plaka !== "ilkDurakKalkan" ? bus.plaka : "-"}
-                                          </p>
+                                        <div className="flex shadow-sm group cursor-pointer transition-all duration-300 w-auto">
+                                          {/* TR Etiketi */}
+                                          <div className="bg-blue-600 rounded-l px-2 py-0.5 flex items-center">
+                                            <span className="font-mono text-xs text-white font-base">TR</span>
+                                          </div>
+                                          {/* Plaka Alanı */}
+                                          <div className="bg-white/90 dark:bg-zinc-800/90 border border-zinc-200 dark:border-zinc-700 border-l-0 rounded-r px-2 py-0.5">
+                                            {(() => {
+                                              const plaka = bus.plaka && bus.plaka !== "EnYakinKalkis" && bus.plaka !== "ilkDurakKalkan" ? bus.plaka : "-";
+                                              if (plaka === "-" || !plaka.includes("/")) {
+                                                return (
+                                                  <p className="font-mono text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap">
+                                                    {plaka}
+                                                  </p>
+                                                );
+                                              }
+                                              
+                                              const shortPlaka = plaka.split("/")[0];
+                                              
+                                              return (
+                                                <p className="font-mono text-xs text-zinc-500 dark:text-zinc-400 whitespace-nowrap transition-all duration-300">
+                                                  <span className="group-hover:hidden">
+                                                    {shortPlaka}
+                                                  </span>
+                                                  <span className="hidden group-hover:inline">
+                                                    {plaka}
+                                                  </span>
+                                                </p>
+                                              );
+                                            })()}
+                                          </div>
                                         </div>
 
                                         {/* Zoom kontrolleri */}
@@ -620,7 +649,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                           index === self.findIndex((l) => l.hatno === line.hatno)
                         )
                         .map((line, index) => {
-                          const busNumber = line.hatno?.replace("D", "") || "-"
+                          const busNumber = line.hatno?.replace(/D$/, "") || "-"
                         
                         return (
                           <TableRow
