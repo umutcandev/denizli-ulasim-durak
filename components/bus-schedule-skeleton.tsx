@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ChevronDown } from "lucide-react"
 
 interface BusScheduleSkeletonProps {
   stationName?: string
@@ -68,7 +69,7 @@ export function BusScheduleSkeleton({ stationName, stationId }: BusScheduleSkele
           </TabsList>
           
           <TabsContent value="schedule" className="mt-4">
-            <div className="rounded-md border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
+            <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
               <Table>
                 <TableHeader>
                   <TableRow className="border-zinc-200 dark:border-zinc-800">
@@ -80,18 +81,26 @@ export function BusScheduleSkeleton({ stationName, stationId }: BusScheduleSkele
                 </TableHeader>
                 <TableBody>
                   {Array.from({ length: 8 }).map((_, index) => (
-                    <TableRow key={index} className="border-zinc-200 dark:border-zinc-800">
-                      <TableCell className="p-2 pl-3 pr-1 sm:p-4">
-                        <Skeleton className="h-6 w-12" />
+                    <TableRow 
+                      key={index}
+                      className="border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"
+                    >
+                      <TableCell className="font-medium p-2 pl-3 pr-1 sm:p-4">
+                        <div className="flex items-center">
+                          <Skeleton className="h-4 w-6" />
+                          <span className="ml-2">
+                            <ChevronDown className="h-4 w-4 text-zinc-400" />
+                          </span>
+                        </div>
                       </TableCell>
-                      <TableCell className="p-2 px-1 sm:p-4">
-                        <Skeleton className="h-5 w-48 md:w-64" />
+                      <TableCell className="p-2 px-1 sm:p-4 max-w-[120px] sm:max-w-none truncate">
+                        <Skeleton className="h-4 w-24 sm:w-32" />
                       </TableCell>
                       <TableCell className="text-right p-2 px-1 sm:p-4">
-                        <Skeleton className="h-6 w-16 ml-auto" />
+                        <Skeleton className="h-4 w-16 ml-auto" />
                       </TableCell>
                       <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4">
-                        <Skeleton className="h-7 w-7 ml-auto" />
+                        <Skeleton className="h-6 w-6 ml-auto" />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -114,13 +123,13 @@ export function BusScheduleSkeleton({ stationName, stationId }: BusScheduleSkele
                   {Array.from({ length: 6 }).map((_, index) => (
                     <TableRow key={index} className="border-zinc-200 dark:border-zinc-800">
                       <TableCell className="font-medium p-2 pl-3 pr-1 sm:p-4 w-[80px]">
-                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-4 w-8" />
                       </TableCell>
                       <TableCell className="p-2 px-1 sm:p-4 truncate overflow-hidden">
-                        <Skeleton className="h-4 w-full max-w-xs" />
+                        <Skeleton className="h-4 w-32 sm:w-40" />
                       </TableCell>
                       <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4 w-[80px]">
-                        <Skeleton className="h-7 w-7 ml-auto" />
+                        <Skeleton className="h-6 w-6 ml-auto" />
                       </TableCell>
                     </TableRow>
                   ))}
