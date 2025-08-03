@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { FontProvider } from "@/components/font-provider"
+import { Analytics } from '@vercel/analytics/react'
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -78,6 +79,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   )
