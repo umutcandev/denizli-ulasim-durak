@@ -287,7 +287,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
             
             {/* Sağ taraf - Dinamik harita */}
             {stationInfo.longitude && stationInfo.latitude && (
-              <div className="relative w-32 sm:w-40 md:w-48 rounded overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex-shrink-0">
+              <div className="relative w-32 sm:w-40 md:w-48 rounded overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex-shrink-0 z-0">
                 <LeafletStationMap 
                   latitude={stationInfo.latitude} 
                   longitude={stationInfo.longitude}
@@ -643,11 +643,17 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {/* Duplicate verileri filtrele - aynı hat numarası birden fazla olabilir */}
+                      {/* Duplicate verileri filtrele ve küçükten büyüğe sırala */}
                       {busLinesData.busList
                         .filter((line, index, self) => 
                           index === self.findIndex((l) => l.hatno === line.hatno)
                         )
+                        .sort((a, b) => {
+                          // Hat numaralarını sayısal olarak karşılaştır
+                          const numA = parseInt(a.hatno?.replace(/D$/, "") || "0", 10)
+                          const numB = parseInt(b.hatno?.replace(/D$/, "") || "0", 10)
+                          return numA - numB
+                        })
                         .map((line, index) => {
                           const busNumber = line.hatno?.replace(/D$/, "") || "-"
                         

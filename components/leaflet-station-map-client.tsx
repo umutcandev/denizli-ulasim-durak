@@ -106,5 +106,5 @@ export default function LeafletStationMapClient({ latitude, longitude, onMapRead
     }
   }, [latitude, longitude])
 
-  return <div ref={mapContainer} className="w-full h-full" />
+  return <div ref={mapContainer} className="w-full h-full relative z-0" />
 }

@@ -64,7 +64,7 @@ export function BusScheduleSkeleton({ stationName, stationId }: BusScheduleSkele
         <Tabs defaultValue="schedule" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="schedule">Dakika Bilgileri</TabsTrigger>
-            <TabsTrigger value="lines">Duraktan Geçen Hatlar</TabsTrigger>
+            <TabsTrigger value="lines">Duraktan Geçenler</TabsTrigger>
           </TabsList>
           
           <TabsContent value="schedule" className="mt-4">
