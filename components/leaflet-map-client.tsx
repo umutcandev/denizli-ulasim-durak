@@ -57,8 +57,8 @@ export default function LeafletMapClient({ latitude, longitude, stationLatitude,
       html: `
         <div style="
           position: relative;
-          width: 30px;
-          height: 30px;
+          width: 25px;
+          height: 25px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -76,34 +76,24 @@ export default function LeafletMapClient({ latitude, longitude, stationLatitude,
             opacity: 0.4;
             animation: busPulse 2s infinite;
           "></div>
-          <!-- Ana daire (yeşil) -->
+          <!-- Ana otobüs ikonu -->
           <div style="
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: #22c55e; 
-            width: 18px; 
-            height: 18px; 
-            border-radius: 5%; 
-            box-shadow: 0 0 8px rgba(0,0,0,0.4);
+            width: 25px; 
+            height: 25px; 
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 2;
           ">
-            <!-- Bus Front ikonu (Lucide) -->
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 6 2 7"/>
-              <path d="M10 6h4"/>
-              <path d="m22 7-2-1"/>
-              <rect width="16" height="16" x="4" y="3" rx="2"/>
-              <path d="M4 11h16"/>
-              <path d="M8 15h.01"/>
-              <path d="M16 15h.01"/>
-              <path d="M6 19v2"/>
-              <path d="M18 21v-2"/>
-            </svg>
+            <img src="/images/otobus-real-icon.webp" alt="Otobüs" style="
+              width: 25px; 
+              height: 25px; 
+              object-fit: contain;
+            " />
           </div>
         </div>
         <style>
