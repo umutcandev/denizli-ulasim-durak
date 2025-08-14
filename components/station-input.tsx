@@ -23,7 +23,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
   const [showTooltip, setShowTooltip] = useState(false)
   const [tooltipDisabled, setTooltipDisabled] = useState(false)
 
-  // İlk kez sayfa yüklendiğinde localStorage'dan kontrol et ve 3 saniye sonra tooltip göster
+  // İlk kez sayfa yüklendiğinde localStorage'dan kontrol et ve 1 saniye sonra tooltip göster
   useEffect(() => {
     const hasSeenTooltip = localStorage.getItem("hasSeenBusTimesTooltip")
     if (hasSeenTooltip === "true") {
@@ -35,7 +35,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
       if (!tooltipDisabled && onShowBusTimesClick) {
         setShowTooltip(true)
       }
-    }, 3000)
+    }, 1000)
 
     return () => clearTimeout(timer)
   }, [tooltipDisabled, onShowBusTimesClick])
@@ -131,7 +131,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
         <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
           {onShowBusTimesClick && (
             <TooltipProvider>
-              <Tooltip open={showTooltip} onOpenChange={setShowTooltip}>
+              <Tooltip open={showTooltip}>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
@@ -148,7 +148,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
                   side="bottom" 
                   align="start"
                   sideOffset={4}
-                  alignOffset={16}
+                  alignOffset={12}
                   className="px-2 py-1 text-xs font-medium"
                 >
                   Otobüs saatlerini gör
