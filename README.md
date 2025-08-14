@@ -79,7 +79,6 @@ Denizli Büyükşehir Belediyesi'nin resmi otobüs durak bilgi sistemi ile enteg
 ### Harita ve Görselleştirme
 - **[Leaflet](https://leafletjs.com/)** - Açık kaynak harita kütüphanesi
 - **[React Leaflet](https://react-leaflet.js.org/)** - React için Leaflet entegrasyonu
-- **[Recharts](https://recharts.org/)** - React için grafik kütüphanesi
 
 ### Form ve Validasyon
 - **[React Hook Form](https://react-hook-form.com/)** - Form yönetimi
