@@ -56,7 +56,7 @@ export function BusScheduleSkeleton({ stationName, stationId }: BusScheduleSkele
           <div className="w-full space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Otomatik yenileme</span>
-              <span>10 saniye</span>
+              <span>30 saniye</span>
             </div>
             <Skeleton className="h-2 w-full" />
           </div>

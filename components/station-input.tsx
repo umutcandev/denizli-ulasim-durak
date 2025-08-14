@@ -1,12 +1,13 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, Clock } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipArrow } from "@/components/ui/tooltip"
 
 interface StationInputProps {
   onSubmit: (stationId: string) => void
@@ -19,12 +20,53 @@ interface StationInputProps {
 
 export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick, weatherData }: StationInputProps) {
   const [inputValue, setInputValue] = useState("")
+  const [showTooltip, setShowTooltip] = useState(false)
+  const [tooltipDisabled, setTooltipDisabled] = useState(false)
+
+  // İlk kez sayfa yüklendiğinde localStorage'dan kontrol et ve 3 saniye sonra tooltip göster
+  useEffect(() => {
+    const hasSeenTooltip = localStorage.getItem("hasSeenBusTimesTooltip")
+    if (hasSeenTooltip === "true") {
+      setTooltipDisabled(true)
+      return
+    }
+
+    const timer = setTimeout(() => {
+      if (!tooltipDisabled && onShowBusTimesClick) {
+        setShowTooltip(true)
+      }
+    }, 3000)
+
+    return () => clearTimeout(timer)
+  }, [tooltipDisabled, onShowBusTimesClick])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (inputValue.trim()) {
       onSubmit(inputValue.trim())
+      // Kullanıcı form submit ettiğinde tooltip'i disable et
+      handleUserInteraction()
     }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value)
+    // Kullanıcı input'a yazmaya başladığında tooltip'i disable et
+    handleUserInteraction()
+  }
+
+  const handleBusTimesClick = () => {
+    if (onShowBusTimesClick) {
+      onShowBusTimesClick()
+      // Kullanıcı otobüs saatleri butonuna tıkladığında tooltip'i disable et
+      handleUserInteraction()
+    }
+  }
+
+  const handleUserInteraction = () => {
+    setShowTooltip(false)
+    setTooltipDisabled(true)
+    localStorage.setItem("hasSeenBusTimesTooltip", "true")
   }
 
   const getTemperatureStyle = (temperature: string) => {
@@ -88,16 +130,32 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
       <CardContent>
         <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
           {onShowBusTimesClick && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onShowBusTimesClick}
-              aria-label="Otobüs Saatlerini Göster"
-              className="p-4 sm:px-3 sm:py-3 flex items-center"
-            >
-              <Clock className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Saatler</span>
-            </Button>
+            <TooltipProvider>
+              <Tooltip open={showTooltip} onOpenChange={setShowTooltip}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBusTimesClick}
+                    aria-label="Otobüs Saatlerini Göster"
+                    className="p-4 sm:px-3 sm:py-3 flex items-center"
+                  >
+                    <Clock className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Saatler</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="bottom" 
+                  align="start"
+                  sideOffset={4}
+                  alignOffset={16}
+                  className="px-2 py-1 text-xs font-medium"
+                >
+                  Otobüs saatlerini gör
+                  <TooltipArrow />
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           <Input
             type="number"
@@ -105,7 +163,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
             pattern="[0-9]*"
             placeholder="Durak numarasını girin (örn: 1628)"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={handleInputChange}
             className="flex-1 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
             disabled={isLoading}
           />
