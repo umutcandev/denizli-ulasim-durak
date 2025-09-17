@@ -8,6 +8,7 @@ import RecentBusLines from "@/components/recent-bus-lines"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import MobileBottomSpace from "@/components/mobile-bottom-space"
+import { QrScannerDialog } from "@/components/qr-scanner-dialog"
 import Image from "next/image"
 import Link from "next/link"
 import { Bus, MapPin, Search } from "lucide-react"
@@ -250,6 +251,9 @@ export default function Home() {
     }
   }
 
+  // QR Scanner Dialog State'leri
+  const [isQrScannerDialogOpen, setIsQrScannerDialogOpen] = useState(false)
+
   // Otobüs Saatleri Sorgulama Fonksiyonları
   const openBusScheduleDialog = () => {
     setIsBusScheduleDialogOpen(true)
@@ -262,6 +266,24 @@ export default function Home() {
     
     // Dialog açıldığında arka planda tüm otobüs hatlarını yükle
     preloadBusRoutesData()
+  }
+
+  // QR Scanner Dialog Fonksiyonları
+  const openQrScannerDialog = () => {
+    setIsQrScannerDialogOpen(true)
+  }
+
+  const handleQrCodeDetected = (code: string) => {
+    // QR koddan durak numarasını çıkar ve arama yap
+    console.log('QR Kod algılandı:', code)
+    
+    // QR koddan durak numarasını çıkarmaya çalış
+    const stationMatch = code.match(/\d+/)
+    if (stationMatch) {
+      const stationNumber = stationMatch[0]
+      setStationId(stationNumber)
+      setIsQrScannerDialogOpen(false)
+    }
   }
 
   // Tüm otobüs hatlarını çekme fonksiyonu
@@ -475,6 +497,7 @@ export default function Home() {
             onSubmit={handleStationSubmit} 
             isLoading={loading} 
             onShowBusTimesClick={openBusScheduleDialog}
+            onQrScanClick={openQrScannerDialog}
             weatherData={weatherData}
           />
 
@@ -671,6 +694,13 @@ export default function Home() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* QR Scanner Dialog */}
+      <QrScannerDialog
+        open={isQrScannerDialogOpen}
+        onOpenChange={setIsQrScannerDialogOpen}
+        onQrCodeDetected={handleQrCodeDetected}
+      />
     </main>
   )
 }
