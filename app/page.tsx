@@ -11,7 +11,7 @@ import MobileBottomSpace from "@/components/mobile-bottom-space"
 import { QrScannerDialog } from "@/components/qr-scanner-dialog"
 import Image from "next/image"
 import Link from "next/link"
-import { Bus, MapPin, Search } from "lucide-react"
+import { Bus, MapPin, Search, Plus, Minus, RotateCcw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -55,6 +55,21 @@ export default function Home() {
   const [busScheduleDialogBusNumber, setBusScheduleDialogBusNumber] = useState("")
   const [isBusScheduleDialogOpen, setIsBusScheduleDialogOpen] = useState(false)
   const [isImageLightboxOpen, setIsImageLightboxOpen] = useState(false)
+  
+  // Lightbox zoom state'leri
+  const [lightboxZoom, setLightboxZoom] = useState(1)
+  const [lightboxPan, setLightboxPan] = useState({ x: 0, y: 0 })
+  const [lightboxIsDragging, setLightboxIsDragging] = useState(false)
+  const [lightboxDragStart, setLightboxDragStart] = useState({ x: 0, y: 0 })
+  const [lightboxLastPan, setLightboxLastPan] = useState({ x: 0, y: 0 })
+  
+  // Lightbox pinch zoom için state'ler
+  const [lightboxInitialPinchDistance, setLightboxInitialPinchDistance] = useState(0)
+  const [lightboxInitialZoom, setLightboxInitialZoom] = useState(1)
+  const [lightboxIsPinching, setLightboxIsPinching] = useState(false)
+  
+  const lightboxContainerRef = useRef<HTMLDivElement>(null)
+  const lightboxImageRef = useRef<HTMLImageElement>(null)
 
   // Canlı arama için state'ler
   const [allBusRoutes, setAllBusRoutes] = useState<BusRoute[]>([])
@@ -347,6 +362,187 @@ export default function Home() {
       console.log("Dialog kapandı, veriler temizlendi")
     }
   }
+
+  // Lightbox için iki parmak arasındaki mesafeyi hesapla
+  const getLightboxDistance = useCallback((touch1: React.Touch, touch2: React.Touch) => {
+    const dx = touch1.clientX - touch2.clientX
+    const dy = touch1.clientY - touch2.clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }, [])
+
+  // Lightbox pan sınırlarını hesapla
+  const constrainLightboxPan = useCallback((newPan: { x: number; y: number }, currentZoom: number) => {
+    if (currentZoom <= 1) return { x: 0, y: 0 }
+    
+    const container = lightboxContainerRef.current
+    if (!container) return newPan
+    
+    // Container boyutları
+    const containerRect = container.getBoundingClientRect()
+    const containerWidth = containerRect.width
+    const containerHeight = containerRect.height
+    
+    // Zoom'lanmış resmin boyutları
+    const scaledWidth = containerWidth * currentZoom
+    const scaledHeight = containerHeight * currentZoom
+    
+    // Maksimum pan mesafesi (resmin yarısından fazla kaydırılmasını engelle)
+    const maxPanX = Math.max(0, (scaledWidth - containerWidth) / 2)
+    const maxPanY = Math.max(0, (scaledHeight - containerHeight) / 2)
+    
+    return {
+      x: Math.max(-maxPanX, Math.min(maxPanX, newPan.x)),
+      y: Math.max(-maxPanY, Math.min(maxPanY, newPan.y))
+    }
+  }, [])
+
+  // Lightbox zoom fonksiyonları
+  const lightboxZoomIn = useCallback(() => {
+    setLightboxZoom(prev => {
+      const newZoom = Math.min(prev + 0.5, 5)
+      // Zoom değiştiğinde pan'ı sınırla
+      setLightboxPan(currentPan => constrainLightboxPan(currentPan, newZoom))
+      return newZoom
+    })
+  }, [constrainLightboxPan])
+
+  const lightboxZoomOut = useCallback(() => {
+    setLightboxZoom(prev => {
+      const newZoom = Math.max(prev - 0.5, 0.5)
+      // Zoom değiştiğinde pan'ı sınırla
+      setLightboxPan(currentPan => constrainLightboxPan(currentPan, newZoom))
+      return newZoom
+    })
+  }, [constrainLightboxPan])
+
+  const lightboxResetZoom = useCallback(() => {
+    setLightboxZoom(1)
+    setLightboxPan({ x: 0, y: 0 })
+  }, [])
+
+  // Lightbox mouse wheel zoom
+  const handleLightboxWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? -0.1 : 0.1
+    setLightboxZoom(prev => {
+      const newZoom = Math.max(0.5, Math.min(5, prev + delta))
+      // Zoom değiştiğinde pan'ı sınırla
+      setLightboxPan(currentPan => constrainLightboxPan(currentPan, newZoom))
+      return newZoom
+    })
+  }, [constrainLightboxPan])
+
+  // Lightbox mouse drag fonksiyonları
+  const handleLightboxMouseDown = useCallback((e: React.MouseEvent) => {
+    if (lightboxZoom <= 1) return
+    setLightboxIsDragging(true)
+    setLightboxDragStart({ x: e.clientX, y: e.clientY })
+    setLightboxLastPan(lightboxPan)
+  }, [lightboxZoom, lightboxPan])
+
+  const handleLightboxMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!lightboxIsDragging || lightboxZoom <= 1) return
+    
+    const deltaX = e.clientX - lightboxDragStart.x
+    const deltaY = e.clientY - lightboxDragStart.y
+    
+    const newPan = {
+      x: lightboxLastPan.x + deltaX,
+      y: lightboxLastPan.y + deltaY
+    }
+    
+    setLightboxPan(constrainLightboxPan(newPan, lightboxZoom))
+  }, [lightboxIsDragging, lightboxDragStart, lightboxLastPan, lightboxZoom, constrainLightboxPan])
+
+  const handleLightboxMouseUp = useCallback(() => {
+    setLightboxIsDragging(false)
+  }, [])
+
+  // Lightbox touch fonksiyonları (mobil zoom ve pinch)
+  const handleLightboxTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault()
+    
+    if (e.touches.length === 2) {
+      // İki parmak - pinch zoom başlat
+      const distance = getLightboxDistance(e.touches[0], e.touches[1])
+      setLightboxInitialPinchDistance(distance)
+      setLightboxInitialZoom(lightboxZoom)
+      setLightboxIsPinching(true)
+      setLightboxIsDragging(false)
+    } else if (e.touches.length === 1) {
+      // Tek parmak - drag başlat (sadece zoom > 1 ise)
+      if (lightboxZoom > 1) {
+        const touch = e.touches[0]
+        setLightboxIsDragging(true)
+        setLightboxDragStart({ x: touch.clientX, y: touch.clientY })
+        setLightboxLastPan(lightboxPan)
+      }
+      setLightboxIsPinching(false)
+    }
+  }, [lightboxZoom, lightboxPan, getLightboxDistance])
+
+  const handleLightboxTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault()
+    
+    if (e.touches.length === 2 && lightboxIsPinching) {
+      // İki parmak - pinch zoom
+      const currentDistance = getLightboxDistance(e.touches[0], e.touches[1])
+      const scale = currentDistance / lightboxInitialPinchDistance
+      const newZoom = Math.max(0.5, Math.min(5, lightboxInitialZoom * scale))
+      setLightboxZoom(newZoom)
+      // Zoom değiştiğinde pan'ı sınırla
+      setLightboxPan(currentPan => constrainLightboxPan(currentPan, newZoom))
+    } else if (e.touches.length === 1 && lightboxIsDragging && lightboxZoom > 1) {
+      // Tek parmak - drag
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - lightboxDragStart.x
+      const deltaY = touch.clientY - lightboxDragStart.y
+      
+      const newPan = {
+        x: lightboxLastPan.x + deltaX,
+        y: lightboxLastPan.y + deltaY
+      }
+      
+      setLightboxPan(constrainLightboxPan(newPan, lightboxZoom))
+    }
+  }, [lightboxIsDragging, lightboxDragStart, lightboxLastPan, lightboxZoom, lightboxIsPinching, getLightboxDistance, lightboxInitialPinchDistance, lightboxInitialZoom, constrainLightboxPan])
+
+  const handleLightboxTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setLightboxIsDragging(false)
+      setLightboxIsPinching(false)
+    } else if (e.touches.length === 1 && lightboxIsPinching) {
+      // Pinch'ten tek parmağa geçiş
+      setLightboxIsPinching(false)
+      if (lightboxZoom > 1) {
+        const touch = e.touches[0]
+        setLightboxIsDragging(true)
+        setLightboxDragStart({ x: touch.clientX, y: touch.clientY })
+        setLightboxLastPan(lightboxPan)
+      }
+    }
+  }, [lightboxIsPinching, lightboxZoom, lightboxPan])
+
+  // Lightbox açıldığında zoom ve pan sıfırla
+  useEffect(() => {
+    if (isImageLightboxOpen) {
+      setLightboxZoom(1)
+      setLightboxPan({ x: 0, y: 0 })
+      setLightboxIsDragging(false)
+      setLightboxIsPinching(false)
+      setLightboxInitialPinchDistance(0)
+      setLightboxInitialZoom(1)
+    }
+  }, [isImageLightboxOpen])
+
+  // Lightbox wheel event listener ekle
+  useEffect(() => {
+    const container = lightboxContainerRef.current
+    if (container && isImageLightboxOpen) {
+      container.addEventListener('wheel', handleLightboxWheel, { passive: false })
+      return () => container.removeEventListener('wheel', handleLightboxWheel)
+    }
+  }, [handleLightboxWheel, isImageLightboxOpen])
 
   // Otobüs Saatleri Sorgulama (Dialog İçin) - artık isteğe bağlı hatNo alabiliyor
   const handleBusScheduleSearchInDialog = async (hatNo?: string) => {
@@ -682,15 +878,85 @@ export default function Home() {
                 Bu, {busScheduleDialogBusNumber} nolu otobüs hattının sefer saatlerini gösteren büyütülmüş bir görseldir.
               </DialogDescription>
             </DialogHeader>
-            <Image
-              src={busScheduleImageUrl}
-              alt={`${busScheduleDialogBusNumber} nolu otobüsün sefer saatleri - büyük görünüm`}
-              width={700}
-              height={990}
-              style={{ objectFit: 'contain', width: 'auto', height: 'auto', maxHeight: '90vh', maxWidth: '90vw' }}
-              className="rounded-lg"
-              unoptimized
-            />
+            
+            <div 
+              ref={lightboxContainerRef}
+              className="relative overflow-hidden"
+              style={{ 
+                cursor: lightboxZoom > 1 ? (lightboxIsDragging ? 'grabbing' : 'grab') : 'default',
+                maxHeight: '90vh',
+                maxWidth: '90vw',
+                touchAction: 'none' // Touch event'lerin tarayıcı tarafından handle edilmesini engelle
+              }}
+              onMouseDown={handleLightboxMouseDown}
+              onMouseMove={handleLightboxMouseMove}
+              onMouseUp={handleLightboxMouseUp}
+              onMouseLeave={handleLightboxMouseUp}
+              onTouchStart={handleLightboxTouchStart}
+              onTouchMove={handleLightboxTouchMove}
+              onTouchEnd={handleLightboxTouchEnd}
+            >
+              {/* Zoom Kontrolleri - Sol üst köşe */}
+              <div className="absolute top-4 left-4 z-10 flex flex-col gap-1">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={lightboxZoomIn}
+                  disabled={lightboxZoom >= 5}
+                  className="w-8 h-8 p-0 bg-black/70 hover:bg-black/80 text-white border-0"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={lightboxZoomOut}
+                  disabled={lightboxZoom <= 0.5}
+                  className="w-8 h-8 p-0 bg-black/70 hover:bg-black/80 text-white border-0"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                {(lightboxZoom !== 1 || lightboxPan.x !== 0 || lightboxPan.y !== 0) && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={lightboxResetZoom}
+                    className="w-8 h-8 p-0 bg-black/70 hover:bg-black/80 text-white border-0"
+                    title="Sıfırla"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+
+              {/* Zoom seviyesi göstergesi */}
+              {lightboxZoom !== 1 && (
+                <div className="absolute top-4 right-16 z-10 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                  %{Math.round(lightboxZoom * 100)}
+                </div>
+              )}
+
+              <div 
+                className="flex items-center justify-center"
+                style={{
+                  transform: `scale(${lightboxZoom}) translate(${lightboxPan.x / lightboxZoom}px, ${lightboxPan.y / lightboxZoom}px)`,
+                  transformOrigin: 'center',
+                  transition: lightboxIsDragging ? 'none' : 'transform 0.1s ease-out',
+                }}
+              >
+                <Image
+                  ref={lightboxImageRef}
+                  src={busScheduleImageUrl}
+                  alt={`${busScheduleDialogBusNumber} nolu otobüsün sefer saatleri - büyük görünüm`}
+                  width={700}
+                  height={990}
+                  style={{ objectFit: 'contain', width: 'auto', height: 'auto', maxHeight: '90vh', maxWidth: '90vw' }}
+                  className="rounded-lg select-none"
+                  unoptimized
+                  draggable={false}
+                />
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}

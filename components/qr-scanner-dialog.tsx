@@ -232,7 +232,7 @@ export function QrScannerDialog({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="relative aspect-square bg-zinc-800 rounded-lg overflow-hidden">
+                <div className="relative aspect-square bg-stone-50 dark:bg-muted rounded-lg overflow-hidden">
                   <video
                     ref={videoRef}
                     className="w-full h-full object-cover transition-opacity duration-300"
@@ -246,12 +246,12 @@ export function QrScannerDialog({
                   <canvas ref={canvasRef} className="hidden" />
 
                   {scannerState === "loading" && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/80 backdrop-blur-sm transition-opacity">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm transition-opacity">
                       <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                      <p className="text-white text-lg mt-4 font-medium">
+                      <p className="text-foreground text-lg mt-4 font-medium">
                         Kamera başlatılıyor...
                       </p>
-                      <p className="text-zinc-400 text-sm mt-1">
+                      <p className="text-muted-foreground text-sm mt-1">
                         Lütfen bekleyin
                       </p>
                     </div>
@@ -275,7 +275,7 @@ export function QrScannerDialog({
 
                       {/* Helper Text */}
                       <div className="absolute bottom-2 left-0 right-0 text-center">
-                        <p className="text-white text-sm bg-black/50 px-4 py-1 rounded-full inline-block">
+                        <p className="text-secondary-foreground text-sm bg-secondary/90 px-4 py-1 rounded-full inline-block">
                           QR kodu çerçeveye yaklaştırın
                         </p>
                       </div>
