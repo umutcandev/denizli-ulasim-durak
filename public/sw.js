@@ -7,11 +7,8 @@ const offlineFallbackPage = "offline.html"
 
 // Install stage sets up the offline page in the cache and opens a new cache
 self.addEventListener("install", (event) => {
-  console.log("[PWA Builder] Install Event processing")
-
   event.waitUntil(
     caches.open(CACHE).then((cache) => {
-      console.log("[PWA Builder] Cached offline page during install")
       return cache.add(offlineFallbackPage)
     }),
   )
@@ -24,13 +21,11 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        console.log("[PWA Builder] add page to offline cache: " + response.url)
         // If request was success, add or update it in the cache
         event.waitUntil(updateCache(event.request, response.clone()))
         return response
       })
       .catch((error) => {
-        console.log("[PWA Builder] Network request Failed. Serving content from cache: " + error)
         return fromCache(event.request)
       }),
   )

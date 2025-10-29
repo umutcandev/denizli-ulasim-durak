@@ -116,15 +116,10 @@ export default function Home() {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/sw.js")
-          .then((registration) => {
-            console.log("Service Worker registered with scope:", registration.scope)
-          })
           .catch((error) => {
             console.error("Service Worker registration failed:", error)
           })
       })
-    } else {
-      console.log("Service Worker is disabled in development or preview environment")
     }
   }, [])
 
@@ -289,9 +284,6 @@ export default function Home() {
   }
 
   const handleQrCodeDetected = (code: string) => {
-    // QR koddan durak numarasını çıkar ve arama yap
-    console.log('QR Kod algılandı:', code)
-    
     // QR koddan durak numarasını çıkarmaya çalış
     const stationMatch = code.match(/\d+/)
     if (stationMatch) {
@@ -338,7 +330,6 @@ export default function Home() {
           HatNo: route.HatNo.replace(/D$/, ""),
         }))
         setAllBusRoutes(cleanedRoutes)
-        console.log("Otobüs hatları arka planda yüklendi:", cleanedRoutes.length, "hat")
       }
     } catch (error) {
       console.error("Arka plan veri yükleme hatası:", error)
@@ -359,7 +350,6 @@ export default function Home() {
       setFilteredBusRoutes([])
       setIsImageLightboxOpen(false)
       setIsFilterLoading(false)
-      console.log("Dialog kapandı, veriler temizlendi")
     }
   }
 

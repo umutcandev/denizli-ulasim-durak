@@ -200,10 +200,6 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   // Hat numarasını kopyala
   const copyBusNumber = (busNumber: string) => {
     navigator.clipboard.writeText(busNumber)
-      .then(() => {
-        // İsteğe bağlı olarak bir bildirim gösterilebilir
-        console.log(`Hat ${busNumber} kopyalandı`)
-      })
       .catch(err => {
         console.error('Kopyalama hatası:', err)
       })
