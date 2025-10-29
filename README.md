@@ -1,5 +1,3 @@
-# Denizli Akıllı Durak Sistemi
-
 <div align="center">
 <img src="public/images/logo-twins.png" alt="Denizli Akıllı Durak Logo" width="15%" />
 
@@ -15,7 +13,6 @@ Denizli Büyükşehir Belediyesi'nin resmi otobüs durak bilgi sistemi ile enteg
 
 - [Proje Hakkında](#proje-hakkında)
 - [Özellikler](#özellikler)
-- [QR Kod Tarama Özelliği](#-qr-kod-tarama-özelliği)
 - [Kullanılan Teknolojiler](#kullanılan-teknolojiler)
 - [Proje Yapısı](#-proje-yapısı)
 - [Kurulum](#kurulum)
@@ -63,67 +60,6 @@ Denizli Büyükşehir Belediyesi'nin resmi otobüs durak bilgi sistemi ile enteg
 - **PWA desteği**: Mobil cihazlara uygulama olarak yüklenebilme
 - **Offline çalışma**: Service Worker ile temel işlevlerin offline kullanımı
 - **Responsive tasarım**: Tüm cihaz boyutlarında optimal görüntüleme
-
-## 📱 QR Kod Tarama Özelliği
-
-Denizli Akıllı Durak Sistemi, durak tabelalarındaki QR kodlarını tarayarak hızlı ve pratik bir şekilde durak bilgilerine erişim imkanı sunar.
-
-### Nasıl Çalışır?
-
-1. **Kamera Erişimi**: Ana sayfada "QR Tara" butonuna tıklayın
-2. **İzin Verme**: Tarayıcınız kamera izni isteyecektir, izin verin
-3. **QR Kod Tarama**: Kameranızı durak tabelasındaki QR koduna tutun
-4. **Otomatik Algılama**: QR kod otomatik olarak algılanır ve durak bilgileri yüklenir
-
-### Teknik Detaylar
-
-#### Kullanılan Teknolojiler
-- **jsQR Kütüphanesi**: QR kod algılama ve decode işlemleri için kullanılır
-- **MediaDevices API**: Cihaz kamerasına erişim ve video stream yönetimi
-- **Canvas API**: Video akışından frame yakalama ve görüntü işleme
-- **React Hooks**: Kamera yaşam döngüsü ve state yönetimi
-
-#### QR Kod Formatı
-Uygulama, Denizli Büyükşehir Belediyesi'nin resmi QR kod formatını destekler:
-```
-https://ulasim.denizli.bel.tr/akillidurak/?durakno=[DURAK_NO]
-```
-
-#### Özellikler
-- **Gerçek zamanlı tarama**: Video stream'den sürekli QR kod taraması
-- **Otomatik durak algılama**: QR kod decode edildikten sonra durak numarasını otomatik çıkarma
-- **Hata yönetimi**: Kamera erişim hataları ve geçersiz QR kodlar için kullanıcı dostu hata mesajları
-- **Responsive tasarım**: Mobil ve masaüstü cihazlarda optimize edilmiş görünüm
-- **Otomatik temizlik**: Dialog kapatıldığında kamera stream'inin otomatik olarak durdurulması
-
-#### Güvenlik ve Gizlilik
-- Kamera erişimi sadece QR tarama sırasında istenir
-- Video stream sadece tarama işlemi için kullanılır
-- Hiçbir görüntü sunucuya gönderilmez veya kaydedilmez
-- Tarama işlemi tamamen cihazda (client-side) gerçekleştirilir
-
-### Kullanım Senaryoları
-
-1. **Hızlı Erişim**: Durak numarasını manuel girmek yerine QR kod tarayarak anında erişim
-2. **Yabancı Dil Desteği**: Durak numarasını bilmeyenler için görsel arama
-3. **Erişilebilirlik**: Görmesi zayıf kullanıcılar için büyük hedef alan
-
-### Sorun Giderme
-
-**Kamera açılmıyor**
-- Tarayıcınızın güncel olduğundan emin olun
-- Kamera izinlerini kontrol edin (Ayarlar > Site İzinleri)
-- Başka bir uygulama kamerayı kullanıyor olabilir
-
-**QR kod algılanmıyor**
-- Kamerayı QR koduna daha yakın tutun
-- Yeterli ışık olduğundan emin olun
-- QR kodun hasar görmediğinden emin olun
-- Kamera lensinin temiz olduğunu kontrol edin
-
-**"Geçersiz QR kod" hatası alıyorum**
-- Denizli Büyükşehir Belediyesi'nin resmi durak QR kodunu taradığınızdan emin olun
-- QR kod format: `https://ulasim.denizli.bel.tr/akillidurak/?durakno=`
 
 ## Kullanılan Teknolojiler
 
