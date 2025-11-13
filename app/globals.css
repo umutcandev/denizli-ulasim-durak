@@ -89,6 +89,15 @@
 }
 
 @layer components {
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .time-tag {
     @apply inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }

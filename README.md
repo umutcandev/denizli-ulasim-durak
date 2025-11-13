@@ -14,7 +14,7 @@ Denizli Büyükşehir Belediyesi'nin resmi otobüs durak bilgi sistemi ile enteg
 - [Proje Hakkında](#proje-hakkında)
 - [Özellikler](#özellikler)
 - [Kullanılan Teknolojiler](#kullanılan-teknolojiler)
-- [Proje Yapısı](#-proje-yapısı)
+- [Proje Yapısı](#proje-yapısı)
 - [Kurulum](#kurulum)
 - [Katkıda Bulunma](#katkıda-bulunma)
 - [Lisans](#lisans)
@@ -101,7 +101,7 @@ Denizli Büyükşehir Belediyesi'nin resmi otobüs durak bilgi sistemi ile enteg
 - **[Vercel](https://vercel.com/)** - Hosting ve deployment
 - **[@vercel/analytics](https://vercel.com/analytics)** - Web analitikleri
 
-## 📁 Proje Yapısı
+## Proje Yapısı
 
 ```
 durak/

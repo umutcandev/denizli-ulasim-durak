@@ -1,17 +1,19 @@
 "use client"
 import { useState, useEffect, useCallback, useRef } from "react"
+import { useTheme } from "next-themes"
 import { fetchBusData } from "@/lib/api"
 import BusSchedule from "@/components/bus-schedule"
 import StationInput from "@/components/station-input"
 import RecentStations from "@/components/recent-stations"
 import RecentBusLines from "@/components/recent-bus-lines"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import MobileBottomSpace from "@/components/mobile-bottom-space"
 import { QrScannerDialog } from "@/components/qr-scanner-dialog"
-import Image from "next/image"
+import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
-import { Bus, MapPin, Search, Plus, Minus, RotateCcw } from "lucide-react"
+import { Bus, MapPin, Search, Plus, Minus, RotateCcw, Sun, Moon, Monitor, Info, Clock, QrCode } from "lucide-react"
+import { useIsMobile } from "@/hooks/use-mobile"
+import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -35,7 +37,13 @@ interface BusRoute {
   GuzergahIsmi?: string;
 }
 
+const themes = ["system", "light", "dark"]
+
 export default function Home() {
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  const isMobile = useIsMobile()
+  const [isMobileNavbarReady, setIsMobileNavbarReady] = useState<boolean | undefined>(undefined)
   const [stationId, setStationId] = useState<string>("")
   const [busData, setBusData] = useState<any>(null)
   const [loading, setLoading] = useState<boolean>(false)
@@ -76,6 +84,25 @@ export default function Home() {
   const [filteredBusRoutes, setFilteredBusRoutes] = useState<BusRoute[]>([])
   const [showScrollIndicator, setShowScrollIndicator] = useState(true)
   const [isFilterLoading, setIsFilterLoading] = useState(false)
+
+  // Theme mount kontrolü
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Mobil navbar hazırlık kontrolü
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const checkMobile = () => {
+        setIsMobileNavbarReady(window.innerWidth < 768)
+      }
+      checkMobile()
+      const mql = window.matchMedia("(max-width: 767px)")
+      const handleChange = () => checkMobile()
+      mql.addEventListener("change", handleChange)
+      return () => mql.removeEventListener("change", handleChange)
+    }
+  }, [])
 
   // Hava durumu verilerini çek
   useEffect(() => {
@@ -143,8 +170,6 @@ export default function Home() {
       }
     }
   }, [])
-
-  // Bu useEffect artık kullanılmıyor - API çağrıları handleBusInputChange içinde yapılıyor
 
   // Veri çekme fonksiyonu
   const loadBusData = useCallback(async () => {
@@ -649,34 +674,147 @@ export default function Home() {
     handleBusScheduleSearchInDialog(hatNo) // Seçilen hat için aramayı direkt yap
   }
 
+  const getTemperatureStyle = (temperature: string) => {
+    // Sıcaklık değerini sayıya çevir (°C işaretini kaldır)
+    const temp = parseFloat(temperature.replace(/[^\d.-]/g, ''))
+    
+    if (temp < 0) {
+      // Çok soğuk - Mavi (light modda ters renkler)
+      return "bg-blue-800 border-blue-700 text-blue-100 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200"
+    } else if (temp <= 10) {
+      // Soğuk - Açık mavi (light modda ters renkler)
+      return "bg-sky-800 border-sky-700 text-sky-100 dark:bg-sky-900 dark:border-sky-700 dark:text-sky-200"
+    } else if (temp <= 20) {
+      // Serin - Yeşil (light modda ters renkler)
+      return "bg-green-800 border-green-700 text-green-100 dark:bg-green-900 dark:border-green-700 dark:text-green-200"
+    } else if (temp <= 30) {
+      // Ilık - Sarı (light modda ters renkler)
+      return "bg-yellow-800 border-yellow-700 text-yellow-100 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-200"
+    } else if (temp <= 40) {
+      // Sıcak - Turuncu (light modda ters renkler)
+      return "bg-orange-800 border-orange-700 text-orange-100 dark:bg-orange-900 dark:border-orange-700 dark:text-orange-200"
+    } else {
+      // Çok sıcak - Kırmızı (light modda ters renkler)
+      return "bg-red-800 border-red-700 text-red-100 dark:bg-red-900 dark:border-red-700 dark:text-red-200"
+    }
+  }
+
+  const handleThemeChange = () => {
+    const currentIndex = themes.indexOf(theme ?? "system")
+    const nextIndex = (currentIndex + 1) % themes.length
+    setTheme(themes[nextIndex])
+  }
+
   return (
     <main className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="relative bg-zinc-900 dark:bg-black text-white p-4 sm:p-6 rounded-lg shadow-md mb-6">
-          <div className="flex flex-row justify-between items-center">
-            <div className="flex items-center">
-              <div className="pl-2 mr-3 sm:mr-4">
-                <Image
-                  src="/images/logo-twins.png"
-                  alt="Logo"
-                  width={50}
-                  height={50}
-                  className="object-contain"
-                  loading="lazy"
-                />
-              </div>
-              <div>
-                <Link href="/">
-                  <h1 className="text-xl sm:text-2xl font-bold">Denizli Akıllı Durak</h1>
-                </Link>
-                <p className="text-xs text-gray-400">Denizli Ulaşım'ın durak saatleri için hazırlanmıştır.</p>
-              </div>
+      <header className="bg-zinc-900 dark:bg-zinc-900 text-white sticky top-0 z-50 py-3 safe-area-inset-top">
+        <div className="container mx-auto px-4 max-w-3xl flex items-center justify-between gap-3">
+          {/* Logo Section */}
+          <div className="flex items-center gap-2 flex-1">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+              <Image
+                src="/images/logo-twins.png"
+                alt="Denizli Ulaşım Logo"
+                width={40}
+                height={40}
+                className="object-contain w-full h-full"
+                loading="lazy"
+              />
             </div>
-            <div className="sm:relative sm:top-auto sm:right-auto">
-              <ThemeToggle />
+            <div className="flex flex-col">
+              <Link href="/" className="font-bold text-sm hover:opacity-80 transition-opacity">
+                Denizli Ulaşım
+              </Link>
+              <span className="text-xs text-white/80">İletişim: <a href="mailto:hi@umutcan.xyz" className="underline">hi@umutcan.xyz</a></span>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            {weatherData ? (
+              <div 
+                className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium whitespace-nowrap ${getTemperatureStyle(weatherData.temperature)}`}
+                role="status"
+                aria-label="Current temperature"
+              >
+                <strong>Hava:</strong>&nbsp;{weatherData.temperature}
+              </div>
+            ) : (
+              <Skeleton className="h-6 w-20 rounded-md" />
+            )}
+            {mounted ? (
+              isMobile ? (
+                <button
+                  onClick={handleThemeChange}
+                  className="h-6 w-6 sm:h-7 sm:w-7 bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/40 flex items-center justify-center"
+                  aria-label="Temayı değiştir"
+                  title="Temayı değiştir"
+                >
+                  {theme === "light" && <Sun className="h-3 w-3 sm:h-4 sm:w-4" />}
+                  {theme === "dark" && <Moon className="h-3 w-3 sm:h-4 sm:w-4" />}
+                  {theme === "system" && <Monitor className="h-3 w-3 sm:h-4 sm:w-4" />}
+                  <span className="sr-only">Temayı değiştir</span>
+                </button>
+              ) : (
+                <div className="flex items-center rounded-md border border-zinc-700 p-0.5 bg-zinc-800">
+                  <button
+                    onClick={() => setTheme("system")}
+                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm flex items-center justify-center transition-colors ${theme === "system" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
+                    title="Sistem teması"
+                    aria-label="Sistem teması"
+                  >
+                    <Monitor className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="sr-only">Sistem teması</span>
+                  </button>
+                  <button
+                    onClick={() => setTheme("light")}
+                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm flex items-center justify-center transition-colors ${theme === "light" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
+                    title="Açık tema"
+                    aria-label="Açık tema"
+                  >
+                    <Sun className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="sr-only">Açık tema</span>
+                  </button>
+                  <button
+                    onClick={() => setTheme("dark")}
+                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm flex items-center justify-center transition-colors ${theme === "dark" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
+                    title="Koyu tema"
+                    aria-label="Koyu tema"
+                  >
+                    <Moon className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="sr-only">Koyu tema</span>
+                  </button>
+                </div>
+              )
+            ) : (
+              <div className="h-6 w-6 sm:h-7 sm:w-7 bg-zinc-800 border border-zinc-700 rounded-sm animate-pulse" />
+            )}
+          </div>
         </div>
+      </header>
+      {/* Bilgilendirme Componenti */}
+      <div className="container mx-auto px-4 pt-4 pb-5 max-w-3xl">
+        <div
+          className="dark:bg-zinc-900 border border-border rounded-lg p-3 flex gap-2"
+          role="region"
+          aria-label="Search instructions"
+        >
+          <svg
+            className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <p className="text-xs text-foreground/80 leading-relaxed">
+            Bu proje gönüllü geliştirme projesi olup, Denizli Büyükşehir Belediyesi'nin resmi API'leri ile entegre çalışmaktadır. Kaynak kodları <a href="https://github.com/umutcandev/denizli-ulasim-durak" target="_blank" rel="noopener noreferrer" className="underline">burada</a> bulunmaktadır.
+          </p>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 pb-8 max-w-3xl">
 
         <div className="space-y-6">
           <StationInput 
@@ -684,7 +822,6 @@ export default function Home() {
             isLoading={loading} 
             onShowBusTimesClick={openBusScheduleDialog}
             onQrScanClick={openQrScannerDialog}
-            weatherData={weatherData}
           />
 
           {recentStations.length > 0 && (
@@ -692,16 +829,7 @@ export default function Home() {
           )}
 
           <div ref={scheduleRef}>
-            {!stationId ? (
-              <div className="bg-card text-card-foreground rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm p-3 flex items-center justify-center">
-                <div className="flex items-center gap-3">
-                  <Bus className="h-6 w-6 text-zinc-400 dark:text-zinc-500 flex-shrink-0" />
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Yukarıdan bir durak numarası girin...</p>
-                  </div>
-                </div>
-              </div>
-            ) : loading ? (
+            {!stationId ? null : loading ? (
               <BusScheduleSkeleton stationName={busData?.stationName} stationId={busData?.stationId} />
             ) : error ? (
               <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800/30 p-6 text-center">
@@ -957,6 +1085,51 @@ export default function Home() {
         onOpenChange={setIsQrScannerDialogOpen}
         onQrCodeDetected={handleQrCodeDetected}
       />
+
+      {/* Mobil Alt Navbar - Glassmorphism */}
+      {isMobileNavbarReady === undefined ? (
+        // Skeleton navbar - yüklenirken göster
+        <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom">
+          <div className="bg-zinc-900 dark:bg-zinc-900 backdrop-blur-md shadow-lg">
+            <div className="container mx-auto px-4 py-3 max-w-3xl">
+              <div className="flex items-center justify-center gap-3">
+                <Skeleton className="flex-1 h-10 rounded-md bg-zinc-800/50" />
+                <Skeleton className="flex-1 h-10 rounded-md bg-zinc-800/50" />
+              </div>
+            </div>
+          </div>
+        </nav>
+      ) : isMobileNavbarReady ? (
+        // Gerçek navbar - mobil görünümde göster
+        <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom">
+          <div className="bg-zinc-900 dark:bg-zinc-900 backdrop-blur-md shadow-lg">
+            <div className="container mx-auto px-4 py-3 max-w-3xl">
+              <div className="flex items-center justify-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={openBusScheduleDialog}
+                  aria-label="Otobüs Saatlerini Göster"
+                  className="flex-1 h-10 flex items-center justify-center gap-2 bg-zinc-800/80 backdrop-blur-sm border-zinc-700/50 hover:bg-zinc-700/80 text-white transition-colors"
+                >
+                  <Clock className="h-4 w-4" />
+                  <span className="font-medium">Otobüs Saatleri</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={openQrScannerDialog}
+                  aria-label="QR Kod Tarama"
+                  className="flex-1 h-10 flex items-center justify-center gap-2 bg-zinc-800/80 backdrop-blur-sm border-zinc-700/50 hover:bg-zinc-700/80 text-white transition-colors"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span className="font-medium">QR Tara</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </nav>
+      ) : null}
     </main>
   )
 }

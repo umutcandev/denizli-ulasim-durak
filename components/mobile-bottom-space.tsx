@@ -15,8 +15,8 @@ export default function MobileBottomSpace() {
   if (!visible || !isMobile) return null
   
   return (
-    <div className="h-[100px] w-full mt-8" aria-hidden="true">
-      {/* This is an empty div that adds space at the bottom of mobile devices */}
+    <div className="h-[120px] w-full mt-8" aria-hidden="true">
+      {/* This is an empty div that adds space at the bottom of mobile devices for the sticky navbar */}
     </div>
   )
 }
