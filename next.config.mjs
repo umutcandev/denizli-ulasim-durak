@@ -18,6 +18,16 @@ const nextConfig = {
       },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Node.js v24 ile uyumluluk için webpack hash ayarları
+    if (!isServer) {
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: 'deterministic',
+      }
+    }
+    return config
+  },
 }
 
 export default nextConfig

@@ -78,7 +78,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
     <Card className="border-zinc-200 dark:border-zinc-800 overflow-hidden">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">Durak ve Otobüs Saatleri</CardTitle>
+          <CardTitle className="text-md">Durak ve Otobüs Saatleri</CardTitle>
           <div className="flex items-center gap-2">
             <a
               href="https://github.com/umutcandev/denizli-ulasim-durak"
@@ -98,7 +98,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
             </a>
           </div>
         </div>
-        <CardDescription className="mt-1">
+        <CardDescription className="mt-1 text-xs">
           Durak numarasını girerek o durağa ait otobüs bilgilerini görebilirsiniz.
         </CardDescription>
       </CardHeader>
@@ -152,15 +152,16 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
               inputMode="numeric"
               pattern="[0-9]*"
               placeholder="Durak numarası girin (örn: 14)"
+              style={{ fontSize: "0.80rem" }}
               value={inputValue}
               onChange={handleInputChange}
-              className="flex-1 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
+              className="flex-1 h-8 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
               disabled={isLoading}
             />
             <Button
               type="submit"
               variant="outline"
-              className="bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white dark:bg-white dark:text-black dark:hover:bg-gray-200"
+              className="h-8 bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white dark:bg-white dark:text-black dark:hover:bg-gray-200"
               disabled={isLoading || !inputValue}
             >
               {isLoading && inputValue ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-1" /> Sorgula</>}

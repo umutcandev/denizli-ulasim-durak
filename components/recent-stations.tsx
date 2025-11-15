@@ -15,8 +15,8 @@ export default function RecentStations({ stations, onStationClick }: RecentStati
   return (
     <Card className="border-zinc-200 dark:border-zinc-800 overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl">Son Bakılan Duraklar</CardTitle>
-        <CardDescription className="mt-1">
+        <CardTitle className="text-md">Son Bakılan Duraklar</CardTitle>
+        <CardDescription className="mt-1 text-xs">
           Son bakılan duraklar burada listelenir. Tarayıcı hafızasında saklanır ve kaybolmaz.
         </CardDescription>
       </CardHeader>
@@ -35,7 +35,7 @@ export default function RecentStations({ stations, onStationClick }: RecentStati
                 onClick={() => onStationClick(station.id)}
                 variant="outline"
                 size="sm"
-                className="h-7 py-0 px-2 text-xs bg-zinc-100 border-zinc-300 hover:bg-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-800 max-w-[calc(50%-6px)] sm:max-w-xs"
+                className="h-6 py-0 px-2 text-xs bg-zinc-100 border-zinc-300 hover:bg-zinc-200 dark:bg-zinc-900 dark:border-zinc-800 dark:hover:bg-zinc-800 max-w-[calc(50%-6px)] sm:max-w-xs"
               >
                 <HistoryIcon className="mr-1 h-3 w-3" />
                 <span className="truncate inline-block">{displayName} ({station.id})</span>

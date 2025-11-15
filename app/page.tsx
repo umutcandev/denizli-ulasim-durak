@@ -722,7 +722,7 @@ export default function Home() {
               />
             </div>
             <div className="flex flex-col">
-              <Link href="/" className="font-bold text-sm hover:opacity-80 transition-opacity">
+              <Link href="/" className="font-bold text-md hover:opacity-80 transition-opacity">
                 Denizli Ulaşım
               </Link>
               <span className="text-xs text-white/80">İletişim: <a href="mailto:hi@umutcan.xyz" className="underline">hi@umutcan.xyz</a></span>
@@ -754,38 +754,45 @@ export default function Home() {
                   <span className="sr-only">Temayı değiştir</span>
                 </button>
               ) : (
-                <div className="flex items-center rounded-md border border-zinc-700 p-0.5 bg-zinc-800">
+                <div className="flex items-center rounded-md border border-zinc-700 p-0.5 bg-zinc-800 h-6">
                   <button
                     onClick={() => setTheme("system")}
-                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm flex items-center justify-center transition-colors ${theme === "system" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
+                    className={`h-5 w-5 rounded-sm flex items-center justify-center transition-colors ${theme === "system" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
                     title="Sistem teması"
                     aria-label="Sistem teması"
                   >
-                    <Monitor className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <Monitor className="h-3 w-3" />
                     <span className="sr-only">Sistem teması</span>
                   </button>
                   <button
                     onClick={() => setTheme("light")}
-                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm flex items-center justify-center transition-colors ${theme === "light" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
+                    className={`h-5 w-5 rounded-sm flex items-center justify-center transition-colors ${theme === "light" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
                     title="Açık tema"
                     aria-label="Açık tema"
                   >
-                    <Sun className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <Sun className="h-3 w-3" />
                     <span className="sr-only">Açık tema</span>
                   </button>
                   <button
                     onClick={() => setTheme("dark")}
-                    className={`h-6 w-6 sm:h-7 sm:w-7 rounded-sm flex items-center justify-center transition-colors ${theme === "dark" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
+                    className={`h-5 w-5 rounded-sm flex items-center justify-center transition-colors ${theme === "dark" ? "bg-zinc-700" : "bg-transparent hover:bg-zinc-700"}`}
                     title="Koyu tema"
                     aria-label="Koyu tema"
                   >
-                    <Moon className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <Moon className="h-3 w-3" />
                     <span className="sr-only">Koyu tema</span>
                   </button>
                 </div>
               )
             ) : (
-              <div className="h-6 w-6 sm:h-7 sm:w-7 bg-zinc-800 border border-zinc-700 rounded-sm animate-pulse" />
+              <>
+                <div className="h-6 w-6 sm:h-7 sm:w-7 bg-zinc-800 border border-zinc-700 rounded-sm animate-pulse sm:hidden" />
+                <div className="hidden sm:flex items-center rounded-md border border-zinc-700 p-0.5 bg-zinc-800 h-6 animate-pulse">
+                  <div className="h-5 w-5 rounded-sm bg-zinc-700" />
+                  <div className="h-5 w-5 rounded-sm bg-zinc-700" />
+                  <div className="h-5 w-5 rounded-sm bg-zinc-700" />
+                </div>
+              </>
             )}
           </div>
         </div>

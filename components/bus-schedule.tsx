@@ -275,7 +275,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                   </div>
                 )}
                 {/* Station Name - Alt satır */}
-                <CardTitle className="text-lg font-semibold">
+                <CardTitle className="text-md font-semibold">
                   {stationInfo.stationName}
                 </CardTitle>
               </div>
