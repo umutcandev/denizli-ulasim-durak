@@ -48,6 +48,13 @@ Denizli Büyükşehir Belediyesi'nin resmi otobüs durak bilgi sistemi ile enteg
 - **Otobüs konum takibi**: Gerçek zamanlı otobüs konumlarını harita üzerinde izleme
 - **Durak haritası**: Seçili durakların harita üzerinde gösterimi
 
+### Konum Tabanlı Özellikler
+- **Yakındaki duraklar**: Kullanıcının konumuna göre en yakın durakları listeleme
+- **Mesafe gösterimi**: Durakların kullanıcıya olan mesafesini metre ve kilometre cinsinden gösterme
+- **Konum tabanlı arama**: Konum izni ile otomatik olarak yakındaki durakları bulma
+- **Google Maps entegrasyonu**: Durakların konumunu Google Maps'te açma ve yol tarifi alma
+- **Mesafe renk kodlaması**: Mesafeye göre renk kodlu mesafe göstergesi (yeşil: 200m, sarı: 500m, turuncu: 1000m)
+
 ### Kullanıcı Deneyimi
 - **Son kullanılan duraklar**: Sık kullanılan durakları kaydetme ve hızlı erişim
 - **Son aranan hatlar**: Geçmişte aranan otobüs hatlarını kaydetme
@@ -111,6 +118,7 @@ durak/
 │   │   ├── bus-lines/           # Otobüs hatları API'si
 │   │   ├── bus-schedule-search/ # Otobüs saatleri arama API'si
 │   │   ├── bus-schedules/       # Otobüs saatleri API'si
+│   │   ├── nearby-stations/     # Yakın duraklar API'si
 │   │   └── weather/             # Hava durumu API'si
 │   ├── globals.css              # Global CSS stilleri
 │   ├── layout.tsx               # Ana layout bileşeni
@@ -122,6 +130,7 @@ durak/
 │   ├── ui/                      # Shadcn/ui bileşenleri
 │   ├── bus-schedule.tsx         # Otobüs programı bileşeni
 │   ├── qr-scanner-dialog.tsx    # QR kod tarama dialog bileşeni
+│   ├── nearby-stations-dialog.tsx # Yakın duraklar dialog bileşeni
 │   ├── leaflet-map.tsx          # Harita bileşeni
 │   ├── station-input.tsx        # Durak girişi bileşeni
 │   ├── theme-toggle.tsx         # Tema değiştirici
@@ -147,6 +156,7 @@ durak/
 - **`app/page.tsx`**: Ana sayfa ve tüm işlevselliğin koordine edildiği merkez bileşen
 - **`components/bus-schedule.tsx`**: Otobüs verilerini tablo formatında gösteren ana bileşen
 - **`components/qr-scanner-dialog.tsx`**: QR kod tarama işlevselliği ve kamera yönetimi bileşeni
+- **`components/nearby-stations-dialog.tsx`**: Konum tabanlı yakın duraklar arama ve listeleme bileşeni
 - **`components/leaflet-map.tsx`**: Harita görüntüleme ve etkileşim bileşeni
 - **`lib/api.ts`**: Tüm API çağrılarının merkezi yönetimi
 - **`app/api/*`**: Backend API route'ları, CORS proxy olarak çalışır
@@ -280,6 +290,12 @@ A: Tarayıcınızın güncel olduğundan emin olun. PWA özelliği Chrome, Safar
 
 **S: Harita görünmüyor**
 A: JavaScript'in etkin olduğundan ve konum izinlerinin verildiğinden emin olun.
+
+**S: Yakındaki duraklar özelliği çalışmıyor**
+A: Tarayıcınızın konum iznini verdiğinizden emin olun. Chrome, Safari ve Firefox'un güncel sürümlerinde desteklenir. Konum bilgisi alınamazsa, tarayıcı ayarlarından konum iznini kontrol edin.
+
+**S: Yakındaki duraklar listelenmiyor**
+A: Konum izni verildikten sonra birkaç saniye bekleyin. Eğer hala duraklar gelmiyorsa, yakınınızda durak olmayabilir veya API geçici olarak kapalı olabilir.
 
 ### Hata Bildirimi
 

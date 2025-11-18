@@ -11,8 +11,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import React, { useEffect, useState, useCallback } from "react"
-import { fetchBusSchedules } from "@/lib/api"
+import React, { useEffect, useState, useCallback, useRef } from "react"
+import { fetchBusSchedules, fetchNextBusTime } from "@/lib/api"
 import { BusScheduleImageDialog } from "@/components/bus-schedule-image-dialog"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import LeafletMap from "@/components/leaflet-map"
@@ -63,6 +63,13 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   const [busLinesData, setBusLinesData] = useState<BusLineData | null>(null)
   const [busLinesLoading, setBusLinesLoading] = useState(false)
   const [busLinesError, setBusLinesError] = useState<string | null>(null)
+  
+  // Bir sonraki kalkış zamanları için state (hatno -> busTime)
+  const [nextBusTimes, setNextBusTimes] = useState<Record<string, string | null>>({})
+  // Yüklenmekte olan otobüsler için state (hatno -> loading)
+  const [loadingBusTimes, setLoadingBusTimes] = useState<Record<string, boolean>>({})
+  // Yüklenen otobüsleri takip etmek için ref
+  const fetchedBusNumbers = useRef<Set<string>>(new Set())
 
   // Otobüs saatlerini çek
   const fetchScheduleUrls = useCallback(async () => {
@@ -119,6 +126,51 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
       fetchBusLines(data.stationId)
     }
   }, [data?.stationId, fetchBusLines])
+
+  // Bir otobüs için bir sonraki kalkış zamanını çek
+  const fetchNextBusTimeForBus = useCallback(async (busNumber: string) => {
+    // Eğer zaten yükleniyorsa veya yüklenmişse tekrar yükleme
+    if (fetchedBusNumbers.current.has(busNumber) || loadingBusTimes[busNumber]) {
+      return
+    }
+    
+    // Loading state'ini ayarla
+    setLoadingBusTimes(prev => ({ ...prev, [busNumber]: true }))
+    fetchedBusNumbers.current.add(busNumber)
+    
+    try {
+      const busTime = await fetchNextBusTime(busNumber)
+      setNextBusTimes(prev => ({ ...prev, [busNumber]: busTime }))
+    } catch (error) {
+      console.error(`Otobüs ${busNumber} için zaman çekilemedi:`, error)
+      setNextBusTimes(prev => ({ ...prev, [busNumber]: null }))
+    } finally {
+      setLoadingBusTimes(prev => ({ ...prev, [busNumber]: false }))
+    }
+  }, [loadingBusTimes])
+
+  // Data değiştiğinde ref'i temizle
+  useEffect(() => {
+    fetchedBusNumbers.current.clear()
+    setNextBusTimes({})
+    setLoadingBusTimes({})
+  }, [data?.busList])
+
+  // Expand edilmiş satırlar için API çağrısı yap
+  useEffect(() => {
+    const busList = data?.busList || []
+    if (!busList || busList.length === 0) return
+
+    // Sadece expand edilmiş satırlar için API çağrısı yap
+    busList.forEach((bus, index) => {
+      if (expandedRows[index]) {
+        const busNumber = bus.hatno?.replace(/D$/, "") || ""
+        if (busNumber && busNumber !== "-") {
+          fetchNextBusTimeForBus(busNumber)
+        }
+      }
+    })
+  }, [expandedRows, data?.busList, fetchNextBusTimeForBus])
 
   // Yenileme işlemini özelleştir
   const handleRefresh = useCallback(() => {
@@ -219,6 +271,20 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
   const formatCoordinate = (coordinate: string | undefined): string => {
     if (!coordinate) return "-"
     return coordinate.replace(",", ".")
+  }
+
+  // ISO 8601 formatındaki zamanı HH:mm formatına çeviren yardımcı fonksiyon
+  const formatBusTime = (isoTime: string | null | undefined): string => {
+    if (!isoTime) return "-"
+    try {
+      const date = new Date(isoTime)
+      const hours = date.getHours().toString().padStart(2, "0")
+      const minutes = date.getMinutes().toString().padStart(2, "0")
+      return `${hours}:${minutes}`
+    } catch (error) {
+      console.error("Zaman formatlama hatası:", error)
+      return "-"
+    }
   }
 
   // Map instance'ını kaydet
@@ -453,21 +519,20 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                                   </div>
                                 </div>
 
-                                {/* İlk satır - Sağ: Kalkışa Kalan */}
+                                {/* İlk satır - Sağ: Bir Sonraki Kalkış */}
                                 <div className="px-3 py-2 border-t border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-2">
                                   <div className="w-5 h-5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center flex-shrink-0">
                                     <Clock className="w-2.5 h-2.5 text-zinc-500 dark:text-zinc-400" />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-md font-bold text-zinc-900 dark:text-zinc-100 leading-none">
-                                      {bus.kalkisaKadarkiDakika <= 0 ? 
-                                        "Hareket" : 
-                                        bus.kalkisaKadarkiDakika !== undefined ? 
-                                          `${bus.kalkisaKadarkiDakika}dk` : 
-                                          "Hareket"
-                                      }
-                                    </p>
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-tight">Kalkışa Kalan</p>
+                                    {loadingBusTimes[busNumber] ? (
+                                      <Skeleton className="h-5 w-12 mb-1" />
+                                    ) : (
+                                      <p className="text-md font-bold text-zinc-900 dark:text-zinc-100 leading-none">
+                                        {formatBusTime(nextBusTimes[busNumber])}
+                                      </p>
+                                    )}
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-tight">Sonraki Kalkış</p>
                                   </div>
                                 </div>
 

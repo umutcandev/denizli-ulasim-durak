@@ -9,9 +9,10 @@ import RecentBusLines from "@/components/recent-bus-lines"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import MobileBottomSpace from "@/components/mobile-bottom-space"
 import { QrScannerDialog } from "@/components/qr-scanner-dialog"
+import { NearbyStationsDialog } from "@/components/nearby-stations-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
-import { Bus, MapPin, Search, Plus, Minus, RotateCcw, Sun, Moon, Monitor, Info, Clock, QrCode } from "lucide-react"
+import { Bus, MapPin, Search, Plus, Minus, RotateCcw, Sun, Moon, Monitor, Info, Clock, QrCode, ThermometerSun } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import Image from "next/image"
 import { Input } from "@/components/ui/input"
@@ -289,6 +290,9 @@ export default function Home() {
   // QR Scanner Dialog State'leri
   const [isQrScannerDialogOpen, setIsQrScannerDialogOpen] = useState(false)
 
+  // Nearby Stations Dialog State'leri
+  const [isNearbyStationsDialogOpen, setIsNearbyStationsDialogOpen] = useState(false)
+
   // Otobüs Saatleri Sorgulama Fonksiyonları
   const openBusScheduleDialog = () => {
     setIsBusScheduleDialogOpen(true)
@@ -316,6 +320,15 @@ export default function Home() {
       setStationId(stationNumber)
       setIsQrScannerDialogOpen(false)
     }
+  }
+
+  // Nearby Stations Dialog Fonksiyonları
+  const openNearbyStationsDialog = () => {
+    setIsNearbyStationsDialogOpen(true)
+  }
+
+  const handleStationSelect = (stationId: string) => {
+    setStationId(stationId)
   }
 
   // Tüm otobüs hatlarını çekme fonksiyonu
@@ -731,11 +744,12 @@ export default function Home() {
           <div className="flex items-center gap-2">
             {weatherData ? (
               <div 
-                className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium whitespace-nowrap ${getTemperatureStyle(weatherData.temperature)}`}
+                className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium whitespace-nowrap ${getTemperatureStyle(weatherData.temperature)}`}
                 role="status"
                 aria-label="Current temperature"
               >
-                <strong>Hava:</strong>&nbsp;{weatherData.temperature}
+                <ThermometerSun className="h-3.5 w-3.5" />
+                {weatherData.temperature}
               </div>
             ) : (
               <Skeleton className="h-6 w-20 rounded-md" />
@@ -817,7 +831,7 @@ export default function Home() {
             />
           </svg>
           <p className="text-xs text-foreground/80 leading-relaxed">
-            Bu proje gönüllü geliştirme projesi olup, Denizli Büyükşehir Belediyesi'nin resmi API'leri ile entegre çalışmaktadır. Kaynak kodları <a href="https://github.com/umutcandev/denizli-ulasim-durak" target="_blank" rel="noopener noreferrer" className="underline">burada</a> bulunmaktadır.
+            Bu proje gönüllü geliştirme projesi olup, Denizli Büyükşehir Belediyesi'nin resmi API'leri ile entegre çalışmaktadır.
           </p>
         </div>
       </div>
@@ -829,6 +843,7 @@ export default function Home() {
             isLoading={loading} 
             onShowBusTimesClick={openBusScheduleDialog}
             onQrScanClick={openQrScannerDialog}
+            onLocationClick={openNearbyStationsDialog}
           />
 
           {recentStations.length > 0 && (
@@ -1091,6 +1106,13 @@ export default function Home() {
         open={isQrScannerDialogOpen}
         onOpenChange={setIsQrScannerDialogOpen}
         onQrCodeDetected={handleQrCodeDetected}
+      />
+
+      {/* Nearby Stations Dialog */}
+      <NearbyStationsDialog
+        open={isNearbyStationsDialogOpen}
+        onOpenChange={setIsNearbyStationsDialogOpen}
+        onStationSelect={handleStationSelect}
       />
 
       {/* Mobil Alt Navbar - Glassmorphism */}

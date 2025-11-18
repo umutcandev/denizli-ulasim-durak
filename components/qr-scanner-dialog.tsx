@@ -29,6 +29,7 @@ export function QrScannerDialog({
 }: QrScannerDialogProps) {
   const [scannerState, setScannerState] = useState<ScannerState>("idle")
   const [errorMessage, setErrorMessage] = useState("")
+  const [errorTitle, setErrorTitle] = useState("Kamera Hatası")
   const [retry, setRetry] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -88,14 +89,29 @@ export function QrScannerDialog({
         const code = jsQR(imageData.data, imageData.width, imageData.height)
 
         if (code) {
-          const requiredUrlPrefix = "https://ulasim.denizli.bel.tr/akillidurak/?durakno="
           const extractStationNumber = (url: string): string | null => {
-            if (!url.startsWith(requiredUrlPrefix)) {
-              return null
-            }
             try {
               const urlObj = new URL(url)
-              return urlObj.searchParams.get("durakno")
+              const hostname = urlObj.hostname
+              
+              // Check if URL is from the correct domain
+              if (hostname !== "ulasim.denizli.bel.tr") {
+                return null
+              }
+
+              // Try new format first: ?page=akilliDurak&durakNo=12
+              const durakNo = urlObj.searchParams.get("durakNo")
+              if (durakNo) {
+                return durakNo
+              }
+
+              // Try old format: /akillidurak/?durakno=12
+              const durakno = urlObj.searchParams.get("durakno")
+              if (durakno) {
+                return durakno
+              }
+
+              return null
             } catch {
               return null
             }
@@ -105,7 +121,8 @@ export function QrScannerDialog({
             onQrCodeDetected?.(stationNumber)
             handleClose()
           } else {
-            setErrorMessage("Geçersiz QR kod. Lütfen durak tabelasındaki kodu taradığınızdan emin olun.")
+            setErrorTitle("Geçersiz QR Kod")
+            setErrorMessage(`Geçersiz QR kod. Lütfen durak tabelasındaki kodu taradığınızdan emin olun.\n\nTaranan içerik: ${code.data}`)
             setScannerState("error")
           }
           return // Stop scanning
@@ -117,6 +134,7 @@ export function QrScannerDialog({
     const initializeScanner = async () => {
       setScannerState("loading")
       setErrorMessage("")
+      setErrorTitle("Kamera Hatası")
 
       if (!videoRef.current) {
         // Give it a moment to render after dialog opens
@@ -205,9 +223,9 @@ export function QrScannerDialog({
                   <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
                     <h4 className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">
-                      Kamera Hatası
+                      {errorTitle}
                     </h4>
-                    <p className="text-sm text-red-700 dark:text-red-300">
+                    <p className="text-sm text-red-700 dark:text-red-300 whitespace-pre-line">
                       {errorMessage}
                     </p>
                   </div>

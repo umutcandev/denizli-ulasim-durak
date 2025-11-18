@@ -82,3 +82,30 @@ export async function fetchBusSchedules() {
     return {} // Hata durumunda boş nesne dön
   }
 }
+
+// Bir sonraki otobüs kalkış zamanını çekmek için API fonksiyonu
+export async function fetchNextBusTime(lineNo: string) {
+  try {
+    const response = await fetch(`/api/next-bus-time?lineNo=${lineNo}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store", // Her seferinde yeni veri almak için
+    })
+
+    if (!response.ok) {
+      throw new Error(`API yanıt hatası: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (data.isSuccess && data.value && data.value.busTime) {
+      return data.value.busTime // ISO 8601 formatında zaman döner: "2025-11-18T23:15:00"
+    }
+
+    return null
+  } catch (error) {
+    console.error("Bir sonraki otobüs zamanı çekme hatası:", error)
+    return null
+  }
+}
