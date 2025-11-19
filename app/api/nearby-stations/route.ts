@@ -4,7 +4,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const lat = searchParams.get("lat")
   const lng = searchParams.get("lng")
-  const recordCount = searchParams.get("recordCount") || "5"
+  const recordCount = searchParams.get("recordCount") || "6"
 
   if (!lat || !lng) {
     return NextResponse.json(

@@ -49,17 +49,23 @@ Denizli Büyükşehir Belediyesi'nin resmi otobüs durak bilgi sistemi ile enteg
 - **Durak haritası**: Seçili durakların harita üzerinde gösterimi
 
 ### Konum Tabanlı Özellikler
-- **Yakındaki duraklar**: Kullanıcının konumuna göre en yakın durakları listeleme
+- **Yakındaki duraklar**: Kullanıcının konumuna göre en yakın durakları listeleme ve harita üzerinde görüntüleme
 - **Mesafe gösterimi**: Durakların kullanıcıya olan mesafesini metre ve kilometre cinsinden gösterme
 - **Konum tabanlı arama**: Konum izni ile otomatik olarak yakındaki durakları bulma
 - **Google Maps entegrasyonu**: Durakların konumunu Google Maps'te açma ve yol tarifi alma
-- **Mesafe renk kodlaması**: Mesafeye göre renk kodlu mesafe göstergesi (yeşil: 200m, sarı: 500m, turuncu: 1000m)
+- **Mesafe renk kodlaması**: Mesafeye göre renk kodlu mesafe göstergesi (yeşil: ≤200m, sarı: ≤500m, turuncu: ≤1000m)
+- **Gelişmiş sıralama**: Mesafe, isim veya durak numarasına göre sıralama seçenekleri
+- **Özelleştirilebilir liste**: İstediğiniz sayıda durak listeleme (1-50 arası)
+- **İnteraktif harita görünümü**: Yakındaki durakları harita üzerinde görüntüleme ve etkileşimli popup'lar
 
 ### Kullanıcı Deneyimi
 - **Son kullanılan duraklar**: Sık kullanılan durakları kaydetme ve hızlı erişim
 - **Son aranan hatlar**: Geçmişte aranan otobüs hatlarını kaydetme
-- **Karanlık/Aydınlık tema**: Kullanıcı tercihine göre tema değiştirme
+- **Karanlık/Aydınlık tema**: Kullanıcı tercihine göre tema değiştirme (sistem, açık, koyu)
 - **Otomatik yenileme**: Belirli aralıklarla verileri otomatik güncelleme
+- **Skeleton loading animasyonları**: Yükleme sırasında gerçek içerikle uyumlu skeleton animasyonları
+- **Responsive buton tasarımı**: Mobil ve desktop görünümlerinde optimize edilmiş buton boyutları
+- **Gelişmiş UI bileşenleri**: Shadcn/ui ile modern ve erişilebilir arayüz bileşenleri
 
 ### Ek Özellikler
 - **QR Kod Tarama**: Durak tabelalarındaki QR kodları kamera ile tarayarak anında durak bilgilerine erişim
@@ -156,7 +162,8 @@ durak/
 - **`app/page.tsx`**: Ana sayfa ve tüm işlevselliğin koordine edildiği merkez bileşen
 - **`components/bus-schedule.tsx`**: Otobüs verilerini tablo formatında gösteren ana bileşen
 - **`components/qr-scanner-dialog.tsx`**: QR kod tarama işlevselliği ve kamera yönetimi bileşeni
-- **`components/nearby-stations-dialog.tsx`**: Konum tabanlı yakın duraklar arama ve listeleme bileşeni
+- **`components/nearby-stations-dialog.tsx`**: Konum tabanlı yakın duraklar arama, listeleme ve harita görüntüleme bileşeni. Sıralama, filtreleme ve özelleştirilebilir liste sayısı özellikleri içerir
+- **`components/station-input.tsx`**: Durak girişi bileşeni. Konum tabanlı durak arama butonu ve GitHub repository linki içerir
 - **`components/leaflet-map.tsx`**: Harita görüntüleme ve etkileşim bileşeni
 - **`lib/api.ts`**: Tüm API çağrılarının merkezi yönetimi
 - **`app/api/*`**: Backend API route'ları, CORS proxy olarak çalışır
@@ -296,6 +303,12 @@ A: Tarayıcınızın konum iznini verdiğinizden emin olun. Chrome, Safari ve Fi
 
 **S: Yakındaki duraklar listelenmiyor**
 A: Konum izni verildikten sonra birkaç saniye bekleyin. Eğer hala duraklar gelmiyorsa, yakınınızda durak olmayabilir veya API geçici olarak kapalı olabilir.
+
+**S: Yakındaki durakları sıralayamıyorum**
+A: "Sırala" dropdown menüsü açılmıyorsa, tarayıcınızın güncel olduğundan emin olun. Dialog içindeki dropdown menüler için modern tarayıcılar gereklidir.
+
+**S: Yakındaki duraklar haritası görünmüyor**
+A: Harita yüklenmesi birkaç saniye sürebilir. JavaScript'in etkin olduğundan ve internet bağlantınızın aktif olduğundan emin olun.
 
 ### Hata Bildirimi
 
