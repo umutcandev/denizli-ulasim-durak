@@ -93,7 +93,7 @@ export function QrScannerDialog({
             try {
               const urlObj = new URL(url)
               const hostname = urlObj.hostname
-              
+
               // Check if URL is from the correct domain
               if (hostname !== "ulasim.denizli.bel.tr") {
                 return null
@@ -147,23 +147,51 @@ export function QrScannerDialog({
       }
       const video = videoRef.current
 
+      // Timeout'u biraz uzatalım çünkü birkaç deneme yapacağız
       const loadTimeout = setTimeout(() => {
         setErrorMessage("Kamera başlatılamadı (zaman aşımı). Lütfen sayfayı yenileyip tekrar deneyin.")
         setScannerState("error")
-      }, 5000)
+      }, 10000)
 
       try {
-        const constraints: MediaStreamConstraints = {
-          video: { facingMode: "environment" },
-        }
+        // Tier 1: Optimal constraints (Main Camera explicit preference)
+        // 4:3 aspect ratio (1.333...) çoğu ana kameranın native sensör oranıdır.
+        // Ultra-wide kameralar ise genelde daha düşük çözünürlüklü veya wide (16:9) çalışır.
+        // Ayrıca yüksek çözünürlük isteyerek (1920x1440 gibi) ana sensörü zorluyoruz.
         try {
-          stream = await navigator.mediaDevices.getUserMedia(constraints)
-        } catch (envError) {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true })
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "environment",
+              width: { ideal: 1920 },
+              height: { ideal: 1440 }, // 4:3 ratio for 1920 width
+              aspectRatio: { ideal: 1.333333 } // Explicitly request 4:3
+            }
+          })
+          console.log("Tier 1 camera connected")
+        } catch (t1Error) {
+          console.warn("Tier 1 camera failed, trying Tier 2", t1Error)
+
+          // Tier 2: Basic environment camera fallback
+          // Eğer 4:3 ve yüksek çözünürlük desteklenmiyorsa, sadece "arka kamera" isteyelim
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: "environment" }
+            })
+            console.log("Tier 2 camera connected")
+          } catch (t2Error) {
+            console.warn("Tier 2 camera failed, trying Tier 3", t2Error)
+
+            // Tier 3: Any available camera fallback
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: true
+            })
+            console.log("Tier 3 camera connected")
+          }
         }
 
+        // Stream başarılı şekilde alındıysa video elementine bağla
         video.srcObject = stream
-        
+
         video.onplaying = () => {
           clearTimeout(loadTimeout)
           setScannerState("scanning")
@@ -183,10 +211,12 @@ export function QrScannerDialog({
         clearTimeout(loadTimeout)
         let msg = "Bilinmeyen bir kamera hatası oluştu."
         if (err instanceof Error) {
-          if (err.name === "NotAllowedError") {
+          if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
             msg = "Kamera izni, yalnızca durak numarasını okumak için gereklidir. Otobüs listesini görüntülemek için lütfen kamera izni verin."
-          } else if (err.name === "NotFoundError") {
-            msg = "Kamera bulunamadı."
+          } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+            msg = "Kamera bulunamadı. Cihazınızda kamera olduğundan ve başka bir uygulama tarafından kullanılmadığından emin olun."
+          } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+            msg = "Kamera başlatılamadı. Kamera başka bir uygulama tarafından kullanılıyor olabilir."
           } else {
             msg = err.message
           }

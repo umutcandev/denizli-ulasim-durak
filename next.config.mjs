@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+  },
+  turbopack: {
+    root: process.cwd(),
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -17,16 +19,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-  },
-  webpack: (config, { isServer }) => {
-    // Node.js v24 ile uyumluluk için webpack hash ayarları
-    if (!isServer) {
-      config.optimization = {
-        ...config.optimization,
-        moduleIds: 'deterministic',
-      }
-    }
-    return config
   },
 }
 
