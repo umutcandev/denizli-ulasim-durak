@@ -40,9 +40,11 @@ interface BusLineData {
   stationId: string
   longitude?: string
   latitude?: string
-  busList: Array<{
-    hatno: string
-    hatadi: string
+  routeList: Array<{
+    routeCode: string
+    routeNo: number
+    routeLongName: string
+    routeShortName: string
   }>
 }
 
@@ -95,7 +97,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
           stationId: result.value.stationId,
           longitude: result.value.longitude,
           latitude: result.value.latitude,
-          busList: result.value.busList
+          routeList: result.value.routeList || []
         })
       } else {
         throw new Error("Veri çekilemedi")
@@ -625,7 +627,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                 <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-800/30 p-4 text-center">
                   {busLinesError}
                 </div>
-              ) : !busLinesData || busLinesData.busList.length === 0 ? (
+              ) : !busLinesData || busLinesData.routeList.length === 0 ? (
                 <div className="text-center p-4 text-muted-foreground">Bu duraktan geçen hat bulunamadı.</div>
               ) : (
                 <div className="rounded-md border border-zinc-200 dark:border-zinc-800">
@@ -639,18 +641,18 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                     </TableHeader>
                     <TableBody>
                       {/* Duplicate verileri filtrele ve küçükten büyüğe sırala */}
-                      {busLinesData.busList
+                      {busLinesData.routeList
                         .filter((line, index, self) =>
-                          index === self.findIndex((l) => l.hatno === line.hatno)
+                          index === self.findIndex((l) => l.routeCode === line.routeCode)
                         )
                         .sort((a, b) => {
                           // Hat numaralarını sayısal olarak karşılaştır
-                          const numA = parseInt(a.hatno?.replace(/D$/, "") || "0", 10)
-                          const numB = parseInt(b.hatno?.replace(/D$/, "") || "0", 10)
+                          const numA = parseInt(a.routeCode?.replace(/D$/, "") || "0", 10)
+                          const numB = parseInt(b.routeCode?.replace(/D$/, "") || "0", 10)
                           return numA - numB
                         })
                         .map((line, index) => {
-                          const busNumber = line.hatno?.replace(/D$/, "") || "-"
+                          const busNumber = line.routeCode?.replace(/D$/, "") || "-"
 
                           return (
                             <TableRow
@@ -660,7 +662,7 @@ export default function BusSchedule({ data, onRefresh }: BusScheduleProps) {
                               <TableCell className="font-medium p-2 pl-3 pr-1 sm:p-4 w-[80px]">
                                 {busNumber}
                               </TableCell>
-                              <TableCell className="p-2 px-1 sm:p-4 truncate overflow-hidden" title={line.hatadi || "-"}>{line.hatadi || "-"}</TableCell>
+                              <TableCell className="p-2 px-1 sm:p-4 truncate overflow-hidden" title={line.routeLongName || "-"}>{line.routeLongName || "-"}</TableCell>
                               <TableCell className="text-right p-2 pl-1 pr-3 sm:p-4 w-[80px]">
                                 {busNumber !== "-" && (
                                   <DropdownMenu modal={false}>

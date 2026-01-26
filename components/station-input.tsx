@@ -5,82 +5,38 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Loader2, Clock, QrCode, Search, Map } from "lucide-react"
+import { Loader2, Clock, QrCode, Search } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, TooltipArrow } from "@/components/ui/tooltip"
 
 interface StationInputProps {
   onSubmit: (stationId: string) => void
   isLoading: boolean
-  onShowBusTimesClick?: () => void
   onQrScanClick?: () => void
-  onLocationClick?: () => void
 }
 
-export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick, onQrScanClick, onLocationClick }: StationInputProps) {
+export default function StationInput({ onSubmit, isLoading, onQrScanClick }: StationInputProps) {
   const [inputValue, setInputValue] = useState("")
-  const [showTooltip, setShowTooltip] = useState(false)
-  const [tooltipDisabled, setTooltipDisabled] = useState(false)
 
-  // İlk kez sayfa yüklendiğinde localStorage'dan kontrol et ve 1 saniye sonra tooltip göster
+  // İlk kez sayfa yüklendiğinde localStorage'dan kontrol et
   useEffect(() => {
-    const hasSeenTooltip = localStorage.getItem("hasSeenBusTimesTooltip")
-    if (hasSeenTooltip === "true") {
-      setTooltipDisabled(true)
-      return
-    }
-
-    const timer = setTimeout(() => {
-      if (!tooltipDisabled && onShowBusTimesClick) {
-        setShowTooltip(true)
-      }
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [tooltipDisabled, onShowBusTimesClick])
+    // Tooltip logic removed
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (inputValue.trim()) {
       onSubmit(inputValue.trim())
-      // Kullanıcı form submit ettiğinde tooltip'i disable et
-      handleUserInteraction()
     }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
-    // Kullanıcı input'a yazmaya başladığında tooltip'i disable et
-    handleUserInteraction()
-  }
-
-  const handleBusTimesClick = () => {
-    if (onShowBusTimesClick) {
-      onShowBusTimesClick()
-      // Kullanıcı otobüs saatleri butonuna tıkladığında tooltip'i disable et
-      handleUserInteraction()
-    }
   }
 
   const handleQrScanClick = () => {
     if (onQrScanClick) {
       onQrScanClick()
-      // Kullanıcı QR tarama butonuna tıkladığında tooltip'i disable et
-      handleUserInteraction()
     }
-  }
-
-  const handleLocationClick = () => {
-    if (onLocationClick) {
-      onLocationClick()
-      // Kullanıcı konum butonuna tıkladığında tooltip'i disable et
-      handleUserInteraction()
-    }
-  }
-
-  const handleUserInteraction = () => {
-    setShowTooltip(false)
-    setTooltipDisabled(true)
-    localStorage.setItem("hasSeenBusTimesTooltip", "true")
   }
 
   return (
@@ -96,9 +52,9 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
               className="inline-flex items-center gap-1.5 px-2 py-1 h-6 rounded-md bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors"
               aria-label="GitHub Repository"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
                 fill="currentColor"
                 className="h-4 w-4 text-zinc-800 dark:text-zinc-200"
               >
@@ -115,34 +71,7 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
       <CardContent className="pb-6">
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row w-full items-center gap-2">
           <div className="hidden sm:flex sm:w-auto items-center space-x-2 order-2 sm:order-1">
-            {onShowBusTimesClick && (
-              <TooltipProvider>
-                <Tooltip open={showTooltip}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleBusTimesClick}
-                      aria-label="Otobüs Saatlerini Göster"
-                      className="p-3 sm:px-3 sm:py-3 flex items-center justify-center flex-1 sm:flex-initial"
-                    >
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span className="sm:inline">Otobüs Saatleri</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="bottom"
-                    align="start"
-                    sideOffset={4}
-                    alignOffset={12}
-                    className="px-2 py-1 text-xs font-medium"
-                  >
-                    Otobüs saatlerini gör
-                    <TooltipArrow />
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+
             {onQrScanClick && (
               <Button
                 type="button"
@@ -157,18 +86,6 @@ export default function StationInput({ onSubmit, isLoading, onShowBusTimesClick,
             )}
           </div>
           <div className="flex w-full sm:flex-1 items-center space-x-2 order-1 sm:order-2">
-            {onLocationClick && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleLocationClick}
-                aria-label="Yakındaki Durakları Bul"
-                className="h-8 w-8 p-0 sm:h-10 sm:w-auto sm:px-3 flex-shrink-0 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 flex items-center justify-center"
-                disabled={isLoading}
-              >
-                <Map className="h-4 w-4" />
-              </Button>
-            )}
             <Input
               type="number"
               inputMode="numeric"
