@@ -167,33 +167,28 @@ export function DepartureTimesSection() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="pb-6">
-                    <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex flex-col sm:flex-row w-full items-center gap-2">
-                        {/* QR Tara butonu için boş alan - StationInput ile tutarlılık için */}
-                        <div className="hidden sm:flex sm:w-auto items-center space-x-2 order-2 sm:order-1">
-                            {/* Gelecekte buraya ek özellikler eklenebilir */}
-                        </div>
-
-                        <div className="flex w-full sm:flex-1 items-center space-x-2 order-1 sm:order-2 relative">
+                    <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }} className="flex w-full items-center gap-2">
+                        <div className="flex w-full items-center gap-2 relative">
                             <Input
                                 type="text"
                                 inputMode="text"
                                 pattern="[A-Za-z0-9]*"
                                 placeholder="Hat numarası girin (örn: 190, T1)"
-                                style={{ fontSize: "0.80rem" }}
+                                style={{ fontSize: "0.875rem" }}
                                 value={inputValue}
                                 onChange={handleInputChange}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                                className="h-8 sm:h-auto flex-1 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
+                                className="h-9 flex-1 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
                                 disabled={loading}
                                 maxLength={5}
                             />
                             <Button
                                 type="submit"
                                 variant="outline"
-                                className="h-8 sm:h-auto bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                                className="h-9 px-4 bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 flex-shrink-0"
                                 disabled={loading || !inputValue}
                             >
-                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-1" /> Sorgula</>}
+                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-1.5" /> Sorgula</>}
                             </Button>
 
                             {/* Öneriler Dropdown */}

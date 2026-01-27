@@ -64,10 +64,10 @@ export async function fetchBusSchedules() {
     }
 
     const data = await response.json()
-    
+
     // Otobüs hat numaralarını ve saat resim URL'lerini içeren bir nesne oluştur
     const scheduleUrls: Record<string, string> = {}
-    
+
     if (data && data.otobus && Array.isArray(data.otobus)) {
       data.otobus.forEach((bus: any) => {
         if (bus.HatNo && bus.SaatResim) {
@@ -75,7 +75,7 @@ export async function fetchBusSchedules() {
         }
       })
     }
-    
+
     return scheduleUrls
   } catch (error) {
     console.error("Otobüs saatleri çekme hatası:", error)
@@ -107,5 +107,59 @@ export async function fetchNextBusTime(lineNo: string) {
   } catch (error) {
     console.error("Bir sonraki otobüs zamanı çekme hatası:", error)
     return null
+  }
+}
+
+// Güzergah duraklarını çekmek için API fonksiyonu
+export async function fetchRouteStations(routeCode: string) {
+  try {
+    const response = await fetch(`/api/route-stations?routeCode=${routeCode}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      throw new Error(`API yanıt hatası: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.isSuccess) {
+      throw new Error("API başarısız yanıt döndü")
+    }
+
+    return data.value
+  } catch (error) {
+    console.error("Güzergah durakları çekme hatası:", error)
+    throw error
+  }
+}
+
+// Canlı otobüs verilerini çekmek için API fonksiyonu
+export async function fetchLiveData(lineCode: string) {
+  try {
+    const response = await fetch(`/api/live-data?lineCode=${lineCode}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      throw new Error(`API yanıt hatası: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.isSuccess) {
+      throw new Error("API başarısız yanıt döndü")
+    }
+
+    return data.value || []
+  } catch (error) {
+    console.error("Canlı veri çekme hatası:", error)
+    throw error
   }
 }

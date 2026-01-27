@@ -7,13 +7,14 @@ import StationInput from "@/components/station-input"
 import RecentStations from "@/components/recent-stations"
 import { NearbyStationsDialog } from "@/components/nearby-stations-dialog"
 import { DepartureTimesSection } from "@/components/departure-times-section"
+import { LineInfoSection } from "@/components/line-info-section"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import MobileBottomSpace from "@/components/mobile-bottom-space"
 import { QrScannerDialog } from "@/components/qr-scanner-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { MainNavigation } from "@/components/main-navigation"
 import Link from "next/link"
-import { MapPin, Sun, Moon, Monitor, QrCode, ThermometerSun } from "lucide-react"
+import { MapPin, Sun, Moon, Monitor, QrCode, ThermometerSun, X } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,9 @@ export default function Home() {
   const [weatherData, setWeatherData] = useState<{
     temperature: string;
   } | null>(null)
+  // Bildirim gizleme state'i (Varsayılan false: Flash etkisini önlemek için)
+  const [isNotificationVisible, setIsNotificationVisible] = useState(false)
+
   // Main Navigation State
   const [activeTab, setActiveTab] = useState("station-info")
 
@@ -123,6 +127,27 @@ export default function Home() {
     }
   }, [])
 
+  // Bildirim gizleme kontrolü
+  useEffect(() => {
+    const notificationHiddenAt = localStorage.getItem("notificationHiddenAt")
+
+    if (!notificationHiddenAt) {
+      // Daha önce hiç kapatılmamışsa göster
+      setIsNotificationVisible(true)
+    } else {
+      const hiddenTime = parseInt(notificationHiddenAt)
+      const currentTime = Date.now()
+      const hoursPassed = (currentTime - hiddenTime) / (1000 * 60 * 60)
+
+      // Eğer 24 saatten fazla zaman geçmişse, localStorage'ı temizle ve bildirimi göster
+      if (hoursPassed >= 24) {
+        localStorage.removeItem("notificationHiddenAt")
+        setIsNotificationVisible(true)
+      }
+      // Aksi takdirde false kalmaya devam eder (zaten false başlattık)
+    }
+  }, [])
+
   // Veri çekme fonksiyonu
   const loadBusData = useCallback(async () => {
     if (!stationId) return
@@ -201,6 +226,13 @@ export default function Home() {
       setIsQrScannerDialogOpen(false)
       setActiveTab("station-info") // QR tarandıktan sonra durak bilgisi tabına geç
     }
+  }
+
+  // Bildirim kapatma fonksiyonu
+  const handleNotificationClose = () => {
+    setIsNotificationVisible(false)
+    // Mevcut zamanı timestamp olarak kaydet
+    localStorage.setItem("notificationHiddenAt", Date.now().toString())
   }
 
   // Nearby Stations Dialog Fonksiyonları
@@ -352,31 +384,40 @@ export default function Home() {
       {/* Main Navigation */}
       <MainNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Bilgilendirme Componenti */}
-      <div className="container mx-auto px-4 pt-4 pb-5 max-w-3xl">
-        <div
-          className="dark:bg-zinc-900 border border-border rounded-lg p-3 flex gap-2"
-          role="region"
-          aria-label="Search instructions"
-        >
-          <svg
-            className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            aria-hidden="true"
+      {/* Bilgilendirme Componenti + Ana İçerik Container */}
+      <div className="container mx-auto px-4 pt-4 pb-8 max-w-3xl">
+        {/* Bilgilendirme Kartı */}
+        {isNotificationVisible && (
+          <div
+            className="dark:bg-zinc-900 border border-border rounded-lg p-3 flex gap-2 relative mb-5"
+            role="region"
+            aria-label="Search instructions"
           >
-            <path
-              fillRule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <p className="text-xs text-foreground/80 leading-relaxed">
-            Bu proje gönüllü geliştirme projesi olup, Denizli Büyükşehir Belediyesi'nin resmi API'leri ile entegre çalışmaktadır.
-          </p>
-        </div>
-      </div>
-      <div className="container mx-auto px-4 pb-8 max-w-3xl">
+            <svg
+              className="w-4 h-4 text-primary flex-shrink-0 mt-0.5"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <p className="text-xs text-foreground/80 leading-relaxed pr-6">
+              Bu proje gönüllü geliştirme projesi olup, projedeki tüm veriler Denizli Büyükşehir Belediyesi'nin ulaşım platformu üzerinden anlık olarak çekilmektedir.
+            </p>
+            <button
+              onClick={handleNotificationClose}
+              className="absolute top-2 right-2 p-1 rounded-sm hover:bg-muted/50 transition-colors"
+              aria-label="Bildirimi kapat"
+              title="Bildirimi kapat"
+            >
+              <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+            </button>
+          </div>
+        )}
 
         <div className="space-y-6">
           {activeTab === "station-info" && (
@@ -409,8 +450,17 @@ export default function Home() {
             <DepartureTimesSection />
           )}
 
-          {/* Diğer tablar için placeholder veya boş içerik - şu anlık sadece bu ikisi aktif */}
-          {["line-info", "balance-check", "reload-points"].includes(activeTab) && (
+          {activeTab === "line-info" && (
+            <LineInfoSection
+              onStationSelect={(stationId) => {
+                setStationId(stationId)
+                setActiveTab("station-info")
+              }}
+            />
+          )}
+
+          {/* Diğer tablar için placeholder veya boş içerik */}
+          {["balance-check", "reload-points"].includes(activeTab) && (
             <div className="text-center py-10 text-muted-foreground">
               Bu özellik yapım aşamasındadır.
             </div>
