@@ -174,18 +174,18 @@ export function DepartureTimesSection() {
                                 inputMode="text"
                                 pattern="[A-Za-z0-9]*"
                                 placeholder="Hat numarası girin (örn: 190, T1)"
-                                style={{ fontSize: "0.875rem" }}
+                                style={{ fontSize: "0.80rem" }}
                                 value={inputValue}
                                 onChange={handleInputChange}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                                className="h-9 flex-1 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
+                                className="h-8 flex-1 border-zinc-300 dark:bg-zinc-900 dark:border-zinc-800"
                                 disabled={loading}
                                 maxLength={5}
                             />
                             <Button
                                 type="submit"
                                 variant="outline"
-                                className="h-9 px-4 bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 flex-shrink-0"
+                                className="h-8 px-4 bg-zinc-900 text-white hover:bg-zinc-800 hover:text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 flex-shrink-0"
                                 disabled={loading || !inputValue}
                             >
                                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-1.5" /> Sorgula</>}

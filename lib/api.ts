@@ -163,3 +163,50 @@ export async function fetchLiveData(lineCode: string) {
     throw error
   }
 }
+
+// Kart bilgisi tip tanımlaması
+export interface CardInfo {
+  mifareId: string
+  cardType: string
+  cardTypeDescription: string
+  productionDate: string
+  lastTransactionDate: string
+  currentBalance: string
+  name: string
+  surname: string
+  validityStartDate: string
+  validityEndDate: string
+  cardStatus: string
+  citizenshipNumber: string
+  remainingPass: string
+  subscriptionStartDateTime: string
+  subscriptionEndDateTime: string
+  subscriptionPlatform: string
+}
+
+// Kart bilgilerini çekmek için API fonksiyonu
+export async function fetchCardInfo(mifareId: string): Promise<CardInfo[]> {
+  try {
+    const response = await fetch(`/api/card-info?mifareId=${encodeURIComponent(mifareId)}`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    })
+
+    if (!response.ok) {
+      throw new Error(`API yanıt hatası: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.isSuccess) {
+      throw new Error(data.error || "Kart bilgisi bulunamadı")
+    }
+
+    return data.value || []
+  } catch (error) {
+    console.error("Kart bilgisi çekme hatası:", error)
+    throw error
+  }
+}

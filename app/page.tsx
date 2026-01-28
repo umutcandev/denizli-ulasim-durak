@@ -8,6 +8,7 @@ import RecentStations from "@/components/recent-stations"
 import { NearbyStationsDialog } from "@/components/nearby-stations-dialog"
 import { DepartureTimesSection } from "@/components/departure-times-section"
 import { LineInfoSection } from "@/components/line-info-section"
+import { BalanceCheckSection } from "@/components/balance-check-section"
 import { BusScheduleSkeleton } from "@/components/bus-schedule-skeleton"
 import MobileBottomSpace from "@/components/mobile-bottom-space"
 import { QrScannerDialog } from "@/components/qr-scanner-dialog"
@@ -459,8 +460,12 @@ export default function Home() {
             />
           )}
 
+          {activeTab === "balance-check" && (
+            <BalanceCheckSection />
+          )}
+
           {/* Diğer tablar için placeholder veya boş içerik */}
-          {["balance-check", "reload-points"].includes(activeTab) && (
+          {activeTab === "reload-points" && (
             <div className="text-center py-10 text-muted-foreground">
               Bu özellik yapım aşamasındadır.
             </div>
