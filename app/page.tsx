@@ -19,6 +19,7 @@ import { MapPin, Sun, Moon, Monitor, QrCode, ThermometerSun, X } from "lucide-re
 import { useIsMobile } from "@/hooks/use-mobile"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { DealersSection } from "@/components/dealers-section"
 
 
 
@@ -466,9 +467,7 @@ export default function Home() {
 
           {/* Diğer tablar için placeholder veya boş içerik */}
           {activeTab === "reload-points" && (
-            <div className="text-center py-10 text-muted-foreground">
-              Bu özellik yapım aşamasındadır.
-            </div>
+            <DealersSection />
           )}
 
           {/* Mobile bottom space */}
