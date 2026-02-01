@@ -1,13 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Loader2, HistoryIcon } from "lucide-react"
+import { Search, Loader2, HistoryIcon, X, Info, AlertTriangle } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchCardInfo, CardInfo } from "@/lib/api"
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
+import { motion, AnimatePresence } from "framer-motion"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 // TC Kimlik numarasını maskele (XX***XXX formatı - ilk 2, son 4 görünür)
 function maskCitizenshipNumber(tcNo: string): string {
@@ -26,6 +30,7 @@ export function BalanceCheckSection() {
     const [error, setError] = useState("")
     const [cardData, setCardData] = useState<CardInfo | null>(null)
     const [recentCards, setRecentCards] = useState<string[]>([])
+    const [showInfoModal, setShowInfoModal] = useState(false)
 
     // LocalStorage'dan son arananları yükle
     useEffect(() => {
@@ -83,10 +88,32 @@ export function BalanceCheckSection() {
 
     return (
         <>
+            {/* Güvenlik Bilgilendirmesi - Özel Tasarım */}
+            <div
+                className="dark:bg-zinc-900 border border-border rounded-lg p-3 flex gap-2 relative mb-6"
+                role="region"
+                aria-label="Proje bilgilendirmesi"
+            >
+                <AlertTriangle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground/80 leading-relaxed">
+                    Kimlik numaranız gibi hassas verileriniz kendi tarayıcınız hariç hiçbir yere kaydedilmemektedir. Projenin kodları açık kaynaklıdır ve GitHub üzerinden erişilebilir.
+                </p>
+            </div>
+
             {/* Ana Arama Kartı */}
             <Card className="border-zinc-200 dark:border-zinc-800">
                 <CardHeader className="pb-4">
-                    <CardTitle className="text-md">Bakiye Sorgulama</CardTitle>
+                    <div className="flex items-center gap-3">
+                        <CardTitle className="text-md">Bakiye Sorgulama</CardTitle>
+                        <Badge
+                            variant="secondary"
+                            className="cursor-pointer bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 text-[10px] px-1 h-5 font-medium rounded-sm text-[10px] transition-colors"
+                            onClick={() => setShowInfoModal(true)}
+                        >
+                            <Info className="w-3 h-3 mr-1" />
+                            Kart numarası nerede?
+                        </Badge>
+                    </div>
                     <CardDescription className="mt-1 text-xs">
                         Kart numarası veya TC kimlik numarası ile bakiye sorgulayabilirsiniz.
                     </CardDescription>
@@ -244,6 +271,47 @@ export function BalanceCheckSection() {
                     </CardContent>
                 </Card>
             )}
+
+            {/* Bilgi Modalı - Fancybox tarzı */}
+            <AnimatePresence>
+                {showInfoModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowInfoModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative w-full max-w-4xl max-h-[90vh] flex flex-col items-center justify-center"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="relative bg-transparent rounded-lg overflow-hidden flex items-center justify-center">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-2 right-2 z-50 text-white hover:bg-white/20 rounded-full h-10 w-10"
+                                    onClick={() => setShowInfoModal(false)}
+                                >
+                                    <X className="h-8 w-8 p-2 rounded-full bg-black/50 backdrop-blur-sm" />
+                                </Button>
+                                <TransformWrapper initialScale={1} minScale={0.5} maxScale={3}>
+                                    <TransformComponent wrapperClass="!w-full !h-full flex items-center justify-center">
+                                        <img
+                                            src="/images/bakiyeinfo.png"
+                                            alt="Kart Numarası Bilgisi"
+                                            className="max-h-[85vh] w-auto max-w-full object-contain rounded-md"
+                                        />
+                                    </TransformComponent>
+                                </TransformWrapper>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     )
 }
